@@ -1,2 +1,3 @@
 build_master: localhost:3000
 build_strategy: no_op
+redis_host: localhost

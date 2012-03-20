@@ -1,11 +1,9 @@
-
 require 'rubygems'
 require 'bundler/setup'
 
 require 'logger'
 
 require 'resque'
-Resque.redis.namespace = "resque:kochiku"
 
 require 'kochiku/settings'
 require 'kochiku/git_repo'
@@ -51,3 +49,6 @@ module Kochiku
     end
   end
 end
+
+Resque.redis = Redis.new(:host => Kochiku::Worker.settings.redis_host)
+Resque.redis.namespace = "resque:kochiku"
