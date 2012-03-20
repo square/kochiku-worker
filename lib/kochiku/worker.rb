@@ -1,4 +1,10 @@
 
+require 'rubygems'
+require 'bundler/setup'
+
+require 'resque'
+Resque.redis.namespace = "resque:kochiku"
+
 require 'kochiku/settings'
 require 'kochiku/git_repo'
 
@@ -16,7 +22,7 @@ module Kochiku
         return @logger if @logger
 
         log_dir = File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'log'))
-        log_file = File.open(File.join(log_dir, 'worker.log'), File::WRONLY | File::APPEND)
+        log_file = File.open(File.join(log_dir, 'worker.log'))
         @logger = Logger.new(log_file)
       end
     end

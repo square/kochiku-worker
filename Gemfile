@@ -2,6 +2,7 @@ source 'http://rubygems.org'
 
 gem "rake"
 
+gem "resque"
 gem "json"
 
 gem "rest-client", :require => false

@@ -1,7 +1,9 @@
 require 'rspec'
 require 'rspec/core/rake_task'
 
-Dir.glob('lib/kochiku/tasks/*.rake').each { |r| import r }
+require 'resque/tasks'
+
+Dir.glob('tasks/*.rake').each { |r| import r }
 
 task :default => :spec
 

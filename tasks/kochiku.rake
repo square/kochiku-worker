@@ -1,16 +1,13 @@
 namespace :kochiku do
   namespace :worker do
-    desc 'Start a Build worker'
-    task :start do
-      ENV['QUEUES'] ||= "*"
-      ENV['VVERBOSE'] ||= "1" if Rails.env.development?
-      Rake::Task['resque:work'].invoke
+    task :resque_setup do
+      require 'kochiku/worker'
     end
 
     desc "Setup a development environment to run a kochiku worker. Use capistrano for remote hosts"
     task :setup do
-      tmp_dir = Rails.root.join('tmp', 'build-partition', 'web-cache')
-      log_dir = Rails.root.join("log")
+      tmp_dir = File.expand_path(File.join(File.dirname(__FILE__), '..', 'tmp', 'build-partition', 'web-cache'))
+      log_dir = File.expand_path(File.join(File.dirname(__FILE__), '..', 'log'))
 
       unless File.exists?(tmp_dir)
         FileUtils.mkdir_p tmp_dir
