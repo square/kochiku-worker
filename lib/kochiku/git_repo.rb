@@ -1,3 +1,5 @@
+require 'cocaine'
+
 module Kochiku
   module Worker
     class GitRepo

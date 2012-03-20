@@ -2,6 +2,8 @@
 require 'rubygems'
 require 'bundler/setup'
 
+require 'logger'
+
 require 'resque'
 Resque.redis.namespace = "resque:kochiku"
 
@@ -19,12 +21,25 @@ module Kochiku
       end
 
       def logger
-        return @logger if @logger
-
-        log_dir = File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'log'))
-        log_file = File.open(File.join(log_dir, 'worker.log'))
-        @logger = Logger.new(log_file)
+        @logger ||= Logger.new(STDOUT).tap do |logger|
+          logger.formatter = proc do |severity, datetime, progname, msg|
+            "%5s [%s] %d: %s: %s\n" % [severity, datetime.strftime('%H:%M:%S %Y-%m-%d'), $$, progname, msg2str(msg)]
+          end
+        end
       end
+
+      def msg2str(msg)
+        case msg
+        when ::String
+          msg
+        when ::Exception
+          "#{ msg.message } (#{ msg.class })\n" <<
+            (msg.backtrace || []).join("\n")
+        else
+          msg.inspect
+        end
+      end
+
     end
   end
 end

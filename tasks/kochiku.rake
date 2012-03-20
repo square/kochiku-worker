@@ -1,9 +1,5 @@
 namespace :kochiku do
   namespace :worker do
-    task :resque_setup do
-      require 'kochiku/worker'
-    end
-
     desc "Setup a development environment to run a kochiku worker. Use capistrano for remote hosts"
     task :setup do
       tmp_dir = File.expand_path(File.join(File.dirname(__FILE__), '..', 'tmp', 'build-partition', 'web-cache'))

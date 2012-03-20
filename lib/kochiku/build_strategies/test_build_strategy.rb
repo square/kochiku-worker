@@ -4,9 +4,6 @@ class BuildStrategy
       true
     end
 
-    def promote_build(build_ref)
-    end
-
     def artifacts_glob
       []
     end

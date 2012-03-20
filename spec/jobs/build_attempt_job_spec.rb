@@ -66,6 +66,7 @@ describe BuildAttemptJob do
 
         subject.should_receive(:run_tests).and_raise(StandardError)
         BuildAttemptJob.should_receive(:new).and_return(subject)
+        Kochiku::Worker.logger.stub(:error)
 
         expect { BuildAttemptJob.perform(build_attempt_id, build_part_kind, build_ref, build_paths) }.to raise_error(StandardError)
 

@@ -1,1 +1,1 @@
-build_master: localhost
+build_master: localhost:3000
