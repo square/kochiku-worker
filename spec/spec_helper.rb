@@ -5,8 +5,6 @@ require 'bundler/setup'
 
 require 'rspec'
 require 'webmock/rspec'
-require 'cocaine'
-require 'json'
 
 require 'kochiku/worker'
 

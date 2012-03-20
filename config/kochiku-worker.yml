@@ -1,2 +1,2 @@
 build_master: localhost:3000
-build_strategy: build_all
+build_strategy: no_op

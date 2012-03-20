@@ -15,7 +15,6 @@ require 'kochiku/build_strategies/log_and_random_fail_strategy'
 require 'kochiku/build_strategies/no_op_strategy'
 require 'kochiku/build_strategy_factory'
 
-
 require 'kochiku/jobs/job_base'
 require 'kochiku/jobs/build_attempt_job'
 
