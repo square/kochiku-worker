@@ -16,7 +16,7 @@ class BuildAttemptJob < JobBase
     Kochiku::Worker::GitRepo.inside_copy('web-cache', @build_ref) do
       result = run_tests(@build_kind, @test_files) ? :passed : :failed
       signal_build_is_finished(result)
-      collect_artifacts(BuildStrategy.artifacts_glob)
+      collect_artifacts(Kochiku::Worker.build_strategy.artifacts_glob)
     end
   end
 
@@ -52,7 +52,7 @@ class BuildAttemptJob < JobBase
   end
 
   def run_tests(build_kind, test_files)
-    BuildStrategy.execute_build(build_kind, test_files)
+    Kochiku::Worker.build_strategy.execute_build(build_kind, test_files)
   end
 
   def signal_build_is_starting

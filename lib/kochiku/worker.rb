@@ -10,6 +10,12 @@ Resque.redis.namespace = "resque:kochiku"
 require 'kochiku/settings'
 require 'kochiku/git_repo'
 
+require 'kochiku/build_strategies/build_all_strategy'
+require 'kochiku/build_strategies/log_and_random_fail_strategy'
+require 'kochiku/build_strategies/no_op_strategy'
+require 'kochiku/build_strategy_factory'
+
+
 require 'kochiku/jobs/job_base'
 require 'kochiku/jobs/build_attempt_job'
 
@@ -40,6 +46,9 @@ module Kochiku
         end
       end
 
+      def build_strategy
+        @build_strategy ||= BuildStrategyFactory.get_strategy(settings.build_strategy)
+      end
     end
   end
 end

@@ -1,5 +1,5 @@
-class BuildStrategy
-  class << self
+module BuildStrategy
+  class BuildAllStrategy
     def execute_build(build_kind, test_files)
       system "env -i HOME=$HOME"+
       " PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/usr/X11/bin"+

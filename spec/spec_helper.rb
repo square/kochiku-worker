@@ -8,8 +8,6 @@ require 'webmock/rspec'
 require 'cocaine'
 require 'json'
 
-require "kochiku/build_strategies/test_build_strategy"
-
 require 'kochiku/worker'
 
 Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].each {|f| load f}
