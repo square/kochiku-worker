@@ -20,7 +20,7 @@ set :keep_releases, 5
 set :use_sudo, false
 
 macbuilds = (1..26).map {|n| "macbuild%02d.sfo.squareup.com" % n }
-role :worker, "macbuild-master.sfo.squareup.com", *macbuilds
+role :worker, *macbuilds
 
 after "deploy:setup", "kochiku:setup"
 after "deploy:create_symlink", "kochiku:symlinks"
