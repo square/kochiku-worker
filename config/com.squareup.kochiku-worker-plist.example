@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>Label</key>                <string>com.squareup.kochiku-worker-1</string>
+    <key>Program</key>              <string>/Users/square/.rvm/bin/kochiku_rake</string>
+    <key>ProgramArguments</key>     <array>
+                                    <string> </string>
+                                    <string>resque:work</string>
+                                    <string>--trace</string>
+                                    </array>
+    <key>RunAtLoad</key>            <true/>
+    <key>WorkingDirectory</key>     <string>/Users/square/kochiku-worker/current</string>
+    <key>KeepAlive</key>            <true/>
+    <key>StandardOutPath</key>      <string>/Users/square/kochiku-worker/current/log/resque1-stdout.log</string>
+    <key>StandardErrorPath</key>    <string>/Users/square/kochiku-worker/current/log/resque1-stderr.log</string>
+    <key>LaunchOnlyOnce</key>       <false/>
+    <key>EnvironmentVariables</key> <dict>
+                                      <key>QUEUES</key> <string>ci-jasmine,developer-jasmine,ci-spec,developer-spec</string>
+                                      <key>PIDFILE</key> <string>/Users/square/kochiku-worker/shared/pids/resque1.pid</string>
+                                      <key>PATH</key> <string>/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/usr/X11/bin</string>
+                                    </dict>
+  </dict>
+</plist>
