@@ -1,7 +1,7 @@
 $:.unshift(File.expand_path('./lib', ENV['rvm_path'])) # Add RVM's lib directory to the load path.
 require "rvm/capistrano"
 set :rvm_type, :user
-set :rvm_ruby_string, 'ruby-1.9.3-p0@kochiku-worker'
+set :rvm_ruby_string, 'ruby-1.9.3-p194@kochiku-worker'
 
 require 'bundler/capistrano' # adds bundle:install step to deploy pipeline
 
