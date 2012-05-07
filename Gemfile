@@ -10,6 +10,7 @@ gem "cocaine"
 
 group :development do
   gem 'capistrano', :require => false
+  gem 'rvm-capistrano', :require => false
 end
 
 group :test do
