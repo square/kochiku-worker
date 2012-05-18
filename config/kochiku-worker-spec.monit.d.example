@@ -1,0 +1,6 @@
+check process kochiku-worker with pidfile /home/square/kochiku-worker/shared/pids/kochiku-worker.pid
+  start program "/bin/su -l -c '/etc/init.d/kochiku-worker start' square"
+  stop program "/etc/init.d/kochiku-worker stop"
+  mode active
+  group kochiku
+  if 15 restarts within 15 cycles then timeout

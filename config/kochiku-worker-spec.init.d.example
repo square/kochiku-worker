@@ -1,0 +1,38 @@
+#!/bin/sh
+RAILS_DIR="/home/square/kochiku-worker/current"
+PID_FILE=/home/square/kochiku-worker/shared/pids/kochiku-worker.pid
+queues=ci-spec,developer-spec
+
+cd "$RAILS_DIR"
+
+case "$1" in
+  start)
+    rm -f $PID_FILE
+    su -c 'QUEUES='${queues:-"*"}' VVERBOSE=1 /home/square/.rvm/bin/kochiku_rake resque:work </dev/null >> '$RAILS_DIR'/log/resque.log 2>&1 &' square
+    if [ "$?" = "0" ]; then
+      echo $! > $PID_FILE
+    fi
+  ;;
+  stop)
+    kill -s QUIT $(cat $PID_FILE) && rm -f $PID_FILE
+    exit 0
+  ;;
+  pause)
+    kill -s USR2 $(cat $PID_FILE)
+    exit 0
+  ;;
+  cont)
+    kill -s CONT $(cat $PID_FILE)
+    exit 0
+  ;;
+  restart)
+    $0 stop
+    $0 start
+  ;;
+  status)
+    ps -e -o pid,command | grep [r]esque
+  ;;
+  *)
+    echo "Usage: $0 {start|stop|restart|pause|cont|status}"
+    exit 1
+esac
