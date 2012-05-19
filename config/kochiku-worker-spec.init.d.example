@@ -1,14 +1,14 @@
 #!/bin/sh
-RAILS_DIR="/home/square/kochiku-worker/current"
+RAILS_DIR=/home/square/kochiku-worker/current
 PID_FILE=/home/square/kochiku-worker/shared/pids/kochiku-worker.pid
 queues=ci-spec,developer-spec
 
-cd "$RAILS_DIR"
+cd $RAILS_DIR
 
 case "$1" in
   start)
     rm -f $PID_FILE
-    su -c 'QUEUES='${queues:-"*"}' VVERBOSE=1 /home/square/.rvm/bin/kochiku_rake resque:work </dev/null >> '$RAILS_DIR'/log/resque.log 2>&1 &' square
+    su -c 'QUEUES='${queues:-"*"}' VERBOSE=1 /home/square/.rvm/bin/kochiku_rake resque:work </dev/null >> '$RAILS_DIR'/log/resque.log 2>&1 &' square
     if [ "$?" = "0" ]; then
       echo $! > $PID_FILE
     fi
