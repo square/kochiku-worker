@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'fileutils'
 
 describe BuildAttemptJob do
   let(:master_host) { "http://" + Kochiku::Worker.settings.build_master }
@@ -7,6 +8,10 @@ describe BuildAttemptJob do
   let(:build_ref) { "123abc" }
   let(:build_paths) { ["/foo/1.test", "foo/baz/a.test", "foo/baz/b.test"] }
   subject { BuildAttemptJob.new(build_attempt_id, build_part_kind, build_ref, build_paths) }
+
+  before do
+    FileUtils.mkdir_p(File.join(File.dirname(__FILE__), "..", "..", "tmp", "build-partition", "web-cache"))
+  end
 
   describe "#perform" do
     before do
