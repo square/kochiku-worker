@@ -16,10 +16,9 @@ describe BuildStrategy::BuildAllStrategy do
       start_time = Time.now
       subject.execute_with_timeout("sleep 3 #{dev_null}", 0.1).should == false
       (Time.now - start_time).should be_within(0.3).of(0.1)
-      result = `ps -p #{@spawned_pid}`
-      # wat
-      result = result.split("\n")
-      result.last.to_s.should_not include("#{@spawned_pid}")
+      expect {
+        Process.kill(0, @spawned_pid)
+      }.to raise_error(Errno::ESRCH)
     end
 
     it "should return true if it succeeds" do
