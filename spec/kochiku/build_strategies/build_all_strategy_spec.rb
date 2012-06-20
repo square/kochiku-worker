@@ -26,4 +26,23 @@ describe BuildStrategy::BuildAllStrategy do
       subject.execute_with_timeout("pwd #{dev_null}", 0.1).should == true
     end
   end
+
+  describe "#all_related_processes" do
+    it "should return only process ids" do
+      related_processes = subject.all_related_processes
+      related_processes.should include(Process.pid)
+      related_processes.should include(Process.getpgrp)
+      related_processes.should include($?.pid)
+    end
+  end
+
+  describe "#child_processes" do
+    it "only includes processes still running that are not this process or it's parent" do
+      Process.spawn("sleep 3")
+      child_processes = subject.child_processes
+      child_processes.should include(@spawned_pid)
+      child_processes.should_not include(Process.pid)
+      child_processes.should_not include(Process.getpgrp)
+    end
+  end
 end

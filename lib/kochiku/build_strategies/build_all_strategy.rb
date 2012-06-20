@@ -23,11 +23,31 @@ module BuildStrategy
         end
         true
       rescue Timeout::Error
-        # Kill the hung job and wait for the kill to complete
-        Process.kill(9, pid)
-        Process.wait
+        kill_all_child_processes
         false
       end
+    end
+
+    def kill_all_child_processes
+      child_processes.each do |process_to_kill|
+        begin
+          # Kill the hung job and wait for the kill to complete
+          Process.kill(9, process_to_kill)
+          Process.wait(process_to_kill)
+        rescue Errno::ESRCH, Errno::ECHILD # Process has already exited
+        end
+      end
+    end
+
+    def all_related_processes
+      # The slice removes the PID line
+      `ps -x -o "pid" -g #{Process.getpgrp}`.split("\n").slice(1..-1).map { |line| line.strip.split(/\s+/).first }.map(&:to_i)
+    end
+
+    def child_processes
+      # Process.pid is this process, Process.getpgrp is resque, $? is the process that ran the ps
+      kill_not_required = [Process.pid, Process.getpgrp, $?.pid]
+      processes_to_kill = all_related_processes - kill_not_required
     end
   end
 end
