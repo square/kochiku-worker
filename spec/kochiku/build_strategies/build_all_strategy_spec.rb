@@ -37,7 +37,7 @@ describe BuildStrategy::BuildAllStrategy do
   end
 
   describe "#child_processes" do
-    it "only includes processes still running that are not this process or it's parent" do
+    it "only includes processes still running that are not this process or its parent" do
       Process.spawn("sleep 3")
       child_processes = subject.child_processes
       child_processes.should include(@spawned_pid)
