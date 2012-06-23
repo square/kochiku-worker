@@ -22,8 +22,11 @@ describe BuildStrategy::BuildAllStrategy do
     end
 
     it "should return true if it succeeds" do
-      start_time = Time.now
       subject.execute_with_timeout("pwd #{dev_null}", 0.1).should == true
+    end
+
+    it "should return false if it fails" do
+      subject.execute_with_timeout("ls /tmp/afilethatdoesnotexist #{dev_null}", 0.1).should == false
     end
   end
 
