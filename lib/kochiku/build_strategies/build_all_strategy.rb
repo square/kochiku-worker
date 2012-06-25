@@ -48,12 +48,11 @@ module BuildStrategy
 
     def ci_command(build_kind, test_files)
       "env -i HOME=$HOME"+
-      " PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/usr/X11/bin"+
+      " PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/usr/X11/bin:$M2"+
       " DISPLAY=localhost:0.1" +
       " TEST_RUNNER=#{build_kind}"+
       " RUN_LIST=#{test_files.join(',')}"+
       " bash --noprofile --norc -c 'ruby -v ; source ~/.rvm/scripts/rvm ; source .rvmrc ; mkdir log ; script/ci worker 2>log/stderr.log 1>log/stdout.log'"
     end
-
   end
 end
