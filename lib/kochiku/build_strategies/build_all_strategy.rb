@@ -3,7 +3,7 @@ module BuildStrategy
     ONE_HOUR = 3600
 
     def execute_build(build_kind, test_files)
-      execute_with_timeout(ci_command, ONE_HOUR)
+      execute_with_timeout(ci_command(build_kind, test_files), ONE_HOUR)
     end
 
     def artifacts_glob
@@ -45,7 +45,8 @@ module BuildStrategy
       processes_to_kill = all_related_processes - kill_not_required
     end
   private
-    def ci_command
+
+    def ci_command(build_kind, test_files)
       "env -i HOME=$HOME"+
       " PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/usr/X11/bin"+
       " DISPLAY=localhost:0.1" +
