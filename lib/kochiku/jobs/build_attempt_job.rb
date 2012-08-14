@@ -79,7 +79,7 @@ class BuildAttemptJob < JobBase
       build_finish_url = "http://#{Kochiku::Worker.settings.build_master}/build_attempts/#{@build_attempt_id}/finish"
 
       begin
-        RestClient::Request.execute(:method => :post, :url => build_finish_url, :payload => {:state => result}, :headers => {:accept => :json})
+        RestClient::Request.execute(:method => :post, :url => build_finish_url, :payload => {:state => result}, :headers => {:accept => :json}, :timeout => 60, :open_timeout => 60)
       rescue RestClient::Exception => e
         Kochiku::Worker.logger.error("Finish of build (#{@build_attempt_id}) failed: #{e.message}")
         raise
