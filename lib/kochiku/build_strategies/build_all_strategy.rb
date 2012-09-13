@@ -51,7 +51,7 @@ module BuildStrategy
       " PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/usr/X11/bin:$M2"+
       " DISPLAY=localhost:0.1" +
       " TEST_RUNNER=#{build_kind}"+
-      " MAVEN_OPTS=-Xms1024m -Xmx4096m -XX:PermSize=1024m -XX:MaxPermSize=2048m"+
+      " MAVEN_OPTS='-Xms1024m -Xmx4096m -XX:PermSize=1024m -XX:MaxPermSize=2048m'"+
       " RUN_LIST=#{test_files.join(',')}"+
       " bash --noprofile --norc -c 'ruby -v ; source ~/.rvm/scripts/rvm ; source .rvmrc ; mkdir log ; script/ci worker 2>log/stderr.log 1>log/stdout.log'"
     end
