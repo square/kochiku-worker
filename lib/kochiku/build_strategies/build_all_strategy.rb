@@ -2,7 +2,6 @@ require 'net/smtp'
 
 module BuildStrategy
   class BuildAllStrategy
-    ONE_HOUR = 3600
     FORTY_MINUTES = 2400
 
     def execute_build(build_kind, test_files)
