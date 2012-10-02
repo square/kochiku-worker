@@ -18,7 +18,7 @@ set :deploy_via, :remote_cache
 set :keep_releases, 5
 set :use_sudo, false
 
-macbuilds = (1..26).map {|n| "macbuild%02d.sfo.squareup.com" % n }
+macbuilds = (1..22).map {|n| "macbuild%02d.sfo.squareup.com" % n }
 role :worker, *macbuilds
 
 after "deploy:setup", "kochiku:setup"
