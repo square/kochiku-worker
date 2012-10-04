@@ -1,5 +1,3 @@
-require 'net/smtp'
-
 module BuildStrategy
   class BuildAllStrategy
     FORTY_MINUTES = 2400
@@ -21,9 +19,6 @@ module BuildStrategy
         $? == 0
       rescue Timeout::Error
         kill_all_child_processes
-        send_email("build_and_release@squareup.com",
-                   :subject => "[kochiku] Build Part timed out on #{Socket.gethostname}",
-                   :body => "The build timed out at #{Time.now}\nBuild Command = #{command}")
         false
       end
     end
@@ -60,23 +55,6 @@ module BuildStrategy
       " MAVEN_OPTS='-Xms1024m -Xmx4096m -XX:PermSize=1024m -XX:MaxPermSize=2048m'"+
       " RUN_LIST=#{test_files.join(',')}"+
       " bash --noprofile --norc -c 'ruby -v ; source ~/.rvm/scripts/rvm ; source .rvmrc ; mkdir log ; script/ci worker &>log/stdout.log'"
-    end
-
-    def send_email(to, options={})
-      options[:from] ||= 'kochiku-worker@squareup.com'
-      options[:from_alias] ||= 'Kochiku Worker'
-      options[:subject] ||= ""
-      options[:body] ||= ""
-
-      msg = "From: #{options[:from_alias]} <#{options[:from]}>
-To: <#{to}>
-Subject: #{options[:subject]}
-
-#{options[:body]}"
-
-      Net::SMTP.start('daisy.corp.squareup.com', 25) do |smtp|
-        smtp.send_message msg, options[:from], to
-      end
     end
   end
 end
