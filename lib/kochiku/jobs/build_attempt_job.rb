@@ -3,6 +3,7 @@ require 'rest-client'
 class BuildAttemptJob < JobBase
   SQ_WEB_REPO_NAME = 'web-cache'
   SQ_WEB_TEST_COMMAND = "script/ci worker"
+  SQ_WEB_REPO_URL = "git@git.squareup.com:square/web.git"
 
   # TODO: 3 stage deploy, deploy this update - deploy kochiku - then delete the else statement and 3 extra args
   def initialize(build_attempt_id, build_kind = nil, build_ref = nil, test_files = nil)
@@ -14,6 +15,7 @@ class BuildAttemptJob < JobBase
       @test_files = settings_hash["test_files"]
       @repo_name = settings_hash["repo_name"]
       @test_command = settings_hash["test_command"]
+      @repo_url = settings_hash["repo_url"]
     else
       @build_attempt_id = build_attempt_id
       @build_ref = build_ref
@@ -21,6 +23,7 @@ class BuildAttemptJob < JobBase
       @test_files = test_files
       @repo_name = SQ_WEB_REPO_NAME
       @test_command = SQ_WEB_TEST_COMMAND
+      @repo_url = SQ_WEB_REPO_URL
     end
   end
 
@@ -29,7 +32,7 @@ class BuildAttemptJob < JobBase
     build_status = signal_build_is_starting
     return if build_status == :aborted
 
-    Kochiku::Worker::GitRepo.inside_copy(@repo_name, @build_ref) do
+    Kochiku::Worker::GitRepo.inside_copy(@repo_name, @repo_url, @build_ref) do
       result = run_tests(@build_kind, @test_files, @test_command) ? :passed : :failed
       signal_build_is_finished(result)
       collect_artifacts(Kochiku::Worker.build_strategy.artifacts_glob)

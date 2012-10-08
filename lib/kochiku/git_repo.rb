@@ -6,9 +6,12 @@ module Kochiku
       WORKING_DIR = File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'tmp', 'build-partition'))
 
       class << self
-        def inside_copy(cached_repo_name, ref = "master")
+        def inside_copy(cached_repo_name, repo_url, ref = "master")
           cached_repo_path = File.join(WORKING_DIR, cached_repo_name)
 
+          if !File.directory?(cached_repo_path)
+            clone_repo(repo_url, cached_repo_path)
+          end
           Dir.chdir(cached_repo_path) do
             # update the cached repo
             synchronize_with_remote
@@ -56,6 +59,10 @@ module Kochiku
           unless system(cmd)
             raise "non-0 exit code #{$?} returned from [#{cmd}]"
           end
+        end
+
+        def clone_repo(repo_url, cached_repo_path)
+          Cocaine::CommandLine.new("git clone", "--recursive #{repo_url} #{cached_repo_path}").run
         end
 
         def synchronize_with_remote(name = 'origin')
