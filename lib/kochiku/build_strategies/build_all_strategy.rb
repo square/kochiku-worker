@@ -2,8 +2,8 @@ module BuildStrategy
   class BuildAllStrategy
     FORTY_MINUTES = 2400
 
-    def execute_build(build_kind, test_files)
-      execute_with_timeout(ci_command(build_kind, test_files), FORTY_MINUTES)
+    def execute_build(build_kind, test_files, test_command)
+      execute_with_timeout(ci_command(build_kind, test_files, test_command), FORTY_MINUTES)
     end
 
     def artifacts_glob
@@ -47,14 +47,14 @@ module BuildStrategy
 
     private
 
-    def ci_command(build_kind, test_files)
+    def ci_command(build_kind, test_files, test_command)
       "env -i HOME=$HOME"+
       " PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/usr/X11/bin:$M2"+
       " DISPLAY=localhost:0.1" +
       " TEST_RUNNER=#{build_kind}"+
       " MAVEN_OPTS='-Xms1024m -Xmx4096m -XX:PermSize=1024m -XX:MaxPermSize=2048m'"+
       " RUN_LIST=#{test_files.join(',')}"+
-      " bash --noprofile --norc -c 'ruby -v ; source ~/.rvm/scripts/rvm ; source .rvmrc ; mkdir log ; script/ci worker &>log/stdout.log'"
+      " bash --noprofile --norc -c 'ruby -v ; source ~/.rvm/scripts/rvm ; source .rvmrc ; mkdir log ; #{test_command} &>log/stdout.log'"
     end
   end
 end
