@@ -50,7 +50,7 @@ module BuildStrategy
     def ci_command(build_kind, test_files, test_command)
       "env -i HOME=$HOME"+
       " PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/usr/X11/bin:$M2"+
-      " DISPLAY=localhost:0.1" +
+      " DISPLAY=localhost:1.0" +
       " TEST_RUNNER=#{build_kind}"+
       " MAVEN_OPTS='-Xms1024m -Xmx4096m -XX:PermSize=1024m -XX:MaxPermSize=2048m'"+
       " RUN_LIST=#{test_files.join(',')}"+
