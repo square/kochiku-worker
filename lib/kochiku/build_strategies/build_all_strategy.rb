@@ -46,15 +46,14 @@ module BuildStrategy
     end
 
     private
-
     def ci_command(build_kind, test_files, test_command)
       "env -i HOME=$HOME"+
       " PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/usr/X11/bin:$M2"+
       " DISPLAY=localhost:1.0" +
       " TEST_RUNNER=#{build_kind}"+
       " MAVEN_OPTS='-Xms1024m -Xmx4096m -XX:PermSize=1024m -XX:MaxPermSize=2048m'"+
-      " RUN_LIST=#{test_files.join(',')}"+
-      " bash --noprofile --norc -c 'ruby -v ; source ~/.rvm/scripts/rvm ; source .rvmrc ; mkdir log ; #{test_command} &>log/stdout.log'"
+      " RUN_LIST=$TARGETS"+
+      " bash --noprofile --norc -c 'ruby -v ; source ~/.rvm/scripts/rvm ; source .rvmrc ; mkdir log ; #{test_command} &>log/stdout.log'".gsub("$TARGETS", test_files.join(','))
     end
   end
 end
