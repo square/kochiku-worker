@@ -52,7 +52,7 @@ module BuildStrategy
       " DISPLAY=localhost:1.0" +
       " TEST_RUNNER=#{build_kind}"+
       " MAVEN_OPTS='-Xms1024m -Xmx4096m -XX:PermSize=1024m -XX:MaxPermSize=2048m'"+
-      " RUN_LIST=$TARGETS"+
+      " RUN_LIST=#{test_files.join(',')}"+
       " bash --noprofile --norc -c 'ruby -v ; source ~/.rvm/scripts/rvm ; source .rvmrc ; mkdir log ; #{test_command} &>log/stdout.log'".gsub("$TARGETS", test_files.join(','))
     end
   end
