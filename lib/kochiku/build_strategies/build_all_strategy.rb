@@ -1,5 +1,6 @@
 module BuildStrategy
   class BuildAllStrategy
+    LOG_FILE = "log/stdout.log"
     FORTY_MINUTES = 2400
 
     def execute_build(build_kind, test_files, test_command)
@@ -11,7 +12,7 @@ module BuildStrategy
     end
 
     def execute_with_timeout(command, timeout)
-      pid = Process.spawn(command)
+      pid = Process.spawn(command, :err => LOG_FILE, :out => LOG_FILE)
       begin
         Timeout.timeout(timeout) do
           Process.wait(pid)
@@ -47,13 +48,13 @@ module BuildStrategy
 
     private
     def ci_command(build_kind, test_files, test_command)
-      "env -i HOME=$HOME"+
+      ("env -i HOME=$HOME"+
       " PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/usr/X11/bin:$M2"+
       " DISPLAY=localhost:1.0" +
       " TEST_RUNNER=#{build_kind}"+
       " MAVEN_OPTS='-Xms1024m -Xmx4096m -XX:PermSize=1024m -XX:MaxPermSize=2048m'"+
-      " RUN_LIST=#{test_files.join(',')}"+
-      " bash --noprofile --norc -c 'ruby -v ; source ~/.rvm/scripts/rvm ; source .rvmrc ; mkdir log ; #{test_command} &>log/stdout.log'".gsub("$TARGETS", test_files.join(','))
+      " RUN_LIST=$TARGETS"+
+      " bash --noprofile --norc -c 'ruby -v ; source ~/.rvm/scripts/rvm ; source .rvmrc ; mkdir log ; #{test_command}'").gsub("$TARGETS", test_files.join(','))
     end
   end
 end
