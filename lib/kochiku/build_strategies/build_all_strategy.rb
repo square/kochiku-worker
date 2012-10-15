@@ -12,6 +12,7 @@ module BuildStrategy
     end
 
     def execute_with_timeout(command, timeout)
+      Dir.mkdir("log") unless Dir.exists?("log")
       pid = Process.spawn(command, :err => LOG_FILE, :out => LOG_FILE)
       begin
         Timeout.timeout(timeout) do
@@ -54,7 +55,7 @@ module BuildStrategy
       " TEST_RUNNER=#{build_kind}"+
       " MAVEN_OPTS='-Xms1024m -Xmx4096m -XX:PermSize=1024m -XX:MaxPermSize=2048m'"+
       " RUN_LIST=$TARGETS"+
-      " bash --noprofile --norc -c 'ruby -v ; source ~/.rvm/scripts/rvm ; source .rvmrc ; mkdir log ; #{test_command}'").gsub("$TARGETS", test_files.join(','))
+      " bash --noprofile --norc -c 'ruby -v ; source ~/.rvm/scripts/rvm ; source .rvmrc ; #{test_command}'").gsub("$TARGETS", test_files.join(','))
     end
   end
 end
