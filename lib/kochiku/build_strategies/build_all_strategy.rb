@@ -54,7 +54,7 @@ module BuildStrategy
 
     private
     def ci_command(build_kind, test_files, test_command, options)
-      rvm_command = if options["rvm"]
+      rvm_command = if options && options["rvm"]
         "rvm use #{options["rvm"]}"
       else
         "source .rvmrc"
