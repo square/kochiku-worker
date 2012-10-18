@@ -76,7 +76,7 @@ class BuildAttemptJob < JobBase
 
   def run_tests(build_kind, test_files, test_command, options)
     Kochiku::Worker.logger.info("Running tests for #{@build_attempt_id}")
-    Kochiku::Worker.build_strategy.execute_build(build_kind, test_files, test_command)
+    Kochiku::Worker.build_strategy.execute_build(build_kind, test_files, test_command, options)
   end
 
   def signal_build_is_starting
