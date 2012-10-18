@@ -13,6 +13,11 @@ module BuildStrategy
 
     def execute_with_timeout(command, timeout)
       Dir.mkdir("log") unless Dir.exists?("log")
+      File.open(LOG_FILE, "a") do |file|
+        file.write("******** Running command ********\n")
+        file.write(command + "\n")
+        file.write("*********************************\n")
+      end
       pid = Process.spawn(command, :err => LOG_FILE, :out => LOG_FILE)
       begin
         Timeout.timeout(timeout) do
