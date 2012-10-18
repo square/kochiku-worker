@@ -3,8 +3,8 @@ module BuildStrategy
     LOG_FILE = "log/stdout.log"
     FORTY_MINUTES = 2400
 
-    def execute_build(build_kind, test_files, test_command)
-      execute_with_timeout(ci_command(build_kind, test_files, test_command), FORTY_MINUTES)
+    def execute_build(build_kind, test_files, test_command, options)
+      execute_with_timeout(ci_command(build_kind, test_files, test_command, options), FORTY_MINUTES)
     end
 
     def artifacts_glob
@@ -48,14 +48,19 @@ module BuildStrategy
     end
 
     private
-    def ci_command(build_kind, test_files, test_command)
+    def ci_command(build_kind, test_files, test_command, options)
+      rvm_command = if options["rvm"]
+        "rvm use #{options["rvm"]}"
+      else
+        "source .rvmrc"
+      end
       ("env -i HOME=$HOME"+
       " PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/usr/X11/bin:$M2"+
       " DISPLAY=localhost:1.0" +
       " TEST_RUNNER=#{build_kind}"+
       " MAVEN_OPTS='-Xms1024m -Xmx4096m -XX:PermSize=1024m -XX:MaxPermSize=2048m'"+
       " RUN_LIST=$TARGETS"+
-      " bash --noprofile --norc -c 'ruby -v ; source ~/.rvm/scripts/rvm ; source .rvmrc ; #{test_command}'").gsub("$TARGETS", test_files.join(','))
+      " bash --noprofile --norc -c 'ruby -v ; source ~/.rvm/scripts/rvm ; #{rvm_command} ; #{test_command}'").gsub("$TARGETS", test_files.join(','))
     end
   end
 end

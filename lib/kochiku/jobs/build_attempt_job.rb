@@ -16,6 +16,7 @@ class BuildAttemptJob < JobBase
       @repo_name = settings_hash["repo_name"]
       @test_command = settings_hash["test_command"]
       @repo_url = settings_hash["repo_url"]
+      @options = settings_hash["options"]
     else
       @build_attempt_id = build_attempt_id
       @build_ref = build_ref
@@ -33,7 +34,7 @@ class BuildAttemptJob < JobBase
     return if build_status == :aborted
 
     Kochiku::Worker::GitRepo.inside_copy(@repo_name, @repo_url, @build_ref) do
-      result = run_tests(@build_kind, @test_files, @test_command) ? :passed : :failed
+      result = run_tests(@build_kind, @test_files, @test_command, @options) ? :passed : :failed
       signal_build_is_finished(result)
       collect_artifacts(Kochiku::Worker.build_strategy.artifacts_glob)
     end
@@ -73,7 +74,7 @@ class BuildAttemptJob < JobBase
     `hostname`.strip
   end
 
-  def run_tests(build_kind, test_files, test_command)
+  def run_tests(build_kind, test_files, test_command, options)
     Kochiku::Worker.logger.info("Running tests for #{@build_attempt_id}")
     Kochiku::Worker.build_strategy.execute_build(build_kind, test_files, test_command)
   end
