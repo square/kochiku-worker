@@ -60,7 +60,7 @@ module BuildStrategy
         "source .rvmrc"
       end
       ("env -i HOME=$HOME"+
-      " PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/usr/X11/bin:$M2"+
+      " PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/X11/bin:$M2"+
       " DISPLAY=localhost:1.0" +
       " TEST_RUNNER=#{build_kind}"+
       " MAVEN_OPTS='-Xms1024m -Xmx4096m -XX:PermSize=1024m -XX:MaxPermSize=2048m'"+
