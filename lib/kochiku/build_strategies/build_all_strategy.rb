@@ -16,7 +16,10 @@ module BuildStrategy
       File.open(LOG_FILE, "w") do |file|
         file.write(command + "\n")
       end
-      pid = Process.spawn(command, :out => [LOG_FILE, "a"], :err => [:child, :out])
+      pid = nil
+      Bundler.with_clean_env do
+        pid = Process.spawn(command, :out => [LOG_FILE, "a"], :err => [:child, :out])
+      end
       begin
         Timeout.timeout(timeout) do
           Process.wait(pid)
