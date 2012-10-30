@@ -24,8 +24,9 @@ module BuildStrategy
         Timeout.timeout(timeout) do
           Process.wait(pid)
         end
+        exit_status = $? == 0
         kill_all_child_processes
-        $? == 0
+        return exit_status
       rescue Timeout::Error
         kill_all_child_processes
         false
