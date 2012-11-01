@@ -1,31 +1,16 @@
 require 'rest-client'
 
 class BuildAttemptJob < JobBase
-  SQ_WEB_REPO_NAME = 'web-cache'
-  SQ_WEB_TEST_COMMAND = "script/ci worker"
-  SQ_WEB_REPO_URL = "git@git.squareup.com:square/web.git"
-
-  # TODO: 3 stage deploy, deploy this update - deploy kochiku - then delete the else statement and 3 extra args
-  def initialize(build_attempt_id, build_kind = nil, build_ref = nil, test_files = nil)
-    if build_attempt_id.is_a?(Hash)
-      settings_hash = build_attempt_id
-      @build_attempt_id = settings_hash["build_attempt_id"]
-      @build_ref = settings_hash["build_ref"]
-      @build_kind = settings_hash["build_kind"]
-      @test_files = settings_hash["test_files"]
-      @repo_name = settings_hash["repo_name"]
-      @test_command = settings_hash["test_command"]
-      @repo_url = settings_hash["repo_url"]
-      @options = settings_hash["options"]
-    else
-      @build_attempt_id = build_attempt_id
-      @build_ref = build_ref
-      @build_kind = build_kind
-      @test_files = test_files
-      @repo_name = SQ_WEB_REPO_NAME
-      @test_command = SQ_WEB_TEST_COMMAND
-      @repo_url = SQ_WEB_REPO_URL
-    end
+  def initialize(build_options)
+    @build_attempt_id = build_options["build_attempt_id"]
+    @build_ref = build_options["build_ref"]
+    @build_kind = build_options["build_kind"]
+    @test_files = build_options["test_files"]
+    @repo_name = build_options["repo_name"]
+    @test_command = build_options["test_command"]
+    @repo_url = build_options["repo_url"]
+    @timeout = build_options["timeout"]
+    @options = build_options["options"]
   end
 
   def perform
@@ -34,7 +19,7 @@ class BuildAttemptJob < JobBase
     return if build_status == :aborted
 
     Kochiku::Worker::GitRepo.inside_copy(@repo_name, @repo_url, @build_ref) do
-      result = run_tests(@build_kind, @test_files, @test_command, @options) ? :passed : :failed
+      result = run_tests(@build_kind, @test_files, @test_command, @timeout, @options) ? :passed : :failed
       signal_build_is_finished(result)
       collect_artifacts(Kochiku::Worker.build_strategy.artifacts_glob)
     end
@@ -74,9 +59,9 @@ class BuildAttemptJob < JobBase
     `hostname`.strip
   end
 
-  def run_tests(build_kind, test_files, test_command, options)
+  def run_tests(build_kind, test_files, test_command, timeout, options)
     Kochiku::Worker.logger.info("Running tests for #{@build_attempt_id}")
-    Kochiku::Worker.build_strategy.execute_build(build_kind, test_files, test_command, options)
+    Kochiku::Worker.build_strategy.execute_build(build_kind, test_files, test_command, timeout, options)
   end
 
   def signal_build_is_starting

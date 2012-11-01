@@ -1,14 +1,13 @@
 module BuildStrategy
   class BuildAllStrategy
     LOG_FILE = "log/stdout.log"
-    FORTY_MINUTES = 2400
 
-    def execute_build(build_kind, test_files, test_command, options)
-      execute_with_timeout(ci_command(build_kind, test_files, test_command, options), FORTY_MINUTES)
+    def execute_build(build_kind, test_files, test_command, timeout, options)
+      execute_with_timeout(ci_command(build_kind, test_files, test_command, options), timeout.minutes)
     end
 
     def artifacts_glob
-      ['log/*log', 'spec/reports/*.xml', 'features/reports/*.xml']
+      ['log/*log']
     end
 
     def execute_with_timeout(command, timeout)

@@ -1,6 +1,6 @@
 module BuildStrategy
   class NoOpStrategy
-    def execute_build(build_kind, test_files, test_command, options)
+    def execute_build(build_kind, test_files, test_command, timeout, options)
       true
     end
 

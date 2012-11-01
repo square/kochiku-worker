@@ -6,8 +6,18 @@ describe BuildAttemptJob do
   let(:build_attempt_id) { "42" }
   let(:build_part_kind) { "test" }
   let(:build_ref) { "123abc" }
-  let(:build_paths) { ["/foo/1.test", "foo/baz/a.test", "foo/baz/b.test"] }
-  subject { BuildAttemptJob.new(build_attempt_id, build_part_kind, build_ref, build_paths) }
+  let(:test_files) { ["/foo/1.test", "foo/baz/a.test", "foo/baz/b.test"] }
+  let(:build_options) { {
+      "build_attempt_id" => build_attempt_id,
+      "build_ref" => build_ref,
+      "build_kind" => build_part_kind,
+      "test_files" => test_files,
+      "repo_name" => 'web-cache',
+      "test_command" => "script/ci worker",
+      "repo_url" => "git@git.squareup.com:square/web.git"
+  } }
+
+  subject { BuildAttemptJob.new(build_options) }
 
   before do
     FileUtils.mkdir_p(File.join(File.dirname(__FILE__), "..", "..", "tmp", "build-partition", "web-cache"))
@@ -73,7 +83,7 @@ describe BuildAttemptJob do
         BuildAttemptJob.should_receive(:new).and_return(subject)
         Kochiku::Worker.logger.stub(:error)
 
-        expect { BuildAttemptJob.perform(build_attempt_id, build_part_kind, build_ref, build_paths) }.to raise_error(StandardError)
+        expect { BuildAttemptJob.perform(build_options) }.to raise_error(StandardError)
 
         WebMock.should have_requested(:post, "#{master_host}/build_attempts/#{build_attempt_id}/finish").with(:body => {"state"=> "errored"})
       end
