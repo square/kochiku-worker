@@ -3,7 +3,7 @@ module BuildStrategy
     LOG_FILE = "log/stdout.log"
 
     def execute_build(build_kind, test_files, test_command, timeout, options)
-      execute_with_timeout(ci_command(build_kind, test_files, test_command, options), timeout.minutes)
+      execute_with_timeout(ci_command(build_kind, test_files, test_command, options), timeout)
     end
 
     def artifacts_glob
