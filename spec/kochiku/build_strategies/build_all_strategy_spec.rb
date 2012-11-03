@@ -19,6 +19,10 @@ describe BuildStrategy::BuildAllStrategy do
       expect {
         Process.kill(0, @spawned_pid)
       }.to raise_error(Errno::ESRCH)
+
+      log = IO.readlines(BuildStrategy::BuildAllStrategy::LOG_FILE)
+      expected = "******** Process taking too long, Kochiku killing it NOW ************\n"
+      log.last.should == expected
     end
 
     it "should return true if it succeeds" do

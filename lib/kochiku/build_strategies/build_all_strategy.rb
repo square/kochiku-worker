@@ -41,6 +41,9 @@ module BuildStrategy
         rescue Errno::ESRCH, Errno::ECHILD # Process has already exited
         end
       end
+      File.open(LOG_FILE, "w") do |file|
+        file.write("\n\n******** Process taking too long, Kochiku killing it NOW ************\n")
+      end
     end
 
     def all_related_processes
