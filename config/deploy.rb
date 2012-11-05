@@ -29,7 +29,7 @@ after "deploy:create_symlink", "kochiku:create_kochiku_worker_yaml"
 namespace :deploy do
   desc "Restart the web application server and all of the build workers"
   task :restart do
-    #restart_mac_workers
+    restart_mac_workers
     restart_ec2_workers
   end
 
