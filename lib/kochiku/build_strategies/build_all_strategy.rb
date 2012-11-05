@@ -43,7 +43,7 @@ module BuildStrategy
 
     def all_related_processes
       # The slice removes the PID line
-      `ps -x -o "pid" -g #{Process.getpgrp}`.split("\n").slice(1..-1).map { |line| line.strip.split(/\s+/).first }.map(&:to_i)
+      `ps x -o "pid" -g #{Process.getpgrp}`.split("\n").slice(1..-1).map { |line| line.strip.split(/\s+/).first }.map(&:to_i)
     end
 
     def child_processes
