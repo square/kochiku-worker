@@ -23,9 +23,7 @@ module BuildStrategy
         Timeout.timeout(timeout) do
           Process.wait(pid)
         end
-        exit_status = $? == 0
-        kill_all_child_processes
-        return exit_status
+        $? == 0
       rescue Timeout::Error
         kill_all_child_processes
         false
@@ -50,7 +48,8 @@ module BuildStrategy
 
     def child_processes
       # Process.pid is this process, Process.getpgrp is resque, $? is the process that ran the ps
-      processes_to_kill = all_related_processes - [Process.pid, Process.getpgrp, $?.pid]
+      kill_not_required = [Process.pid, Process.getpgrp, $?.pid]
+      processes_to_kill = all_related_processes - kill_not_required
     end
 
     private
