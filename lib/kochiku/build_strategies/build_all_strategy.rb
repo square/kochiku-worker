@@ -23,7 +23,9 @@ module BuildStrategy
         Timeout.timeout(timeout) do
           Process.wait(pid)
         end
-        $? == 0
+        exit_status = $?.exitstatus == 0
+        kill_all_child_processes
+        exit_status
       rescue Timeout::Error
         kill_all_child_processes
         false
@@ -32,24 +34,31 @@ module BuildStrategy
 
     def kill_all_child_processes
       child_processes.each do |process_to_kill|
-        begin
-          # Kill the hung job and wait for the kill to complete
-          Process.kill(9, process_to_kill)
-          Process.wait(process_to_kill)
-        rescue Errno::ESRCH, Errno::ECHILD # Process has already exited
-        end
+        kill_process(process_to_kill)
       end
     end
 
-    def all_related_processes
-      # The slice removes the PID line
-      `ps x -o "pid" -g #{Process.getpgrp}`.split("\n").slice(1..-1).map { |line| line.strip.split(/\s+/).first }.map(&:to_i)
+    def kill_process(pid, sig = "HUP")
+      begin
+        Timeout.timeout(10) do
+          Process.kill(sig, process_to_kill)
+          Process.wait(process_to_kill)
+        end
+      rescue Timeout::Error
+        # The process did not exit from SIGHUP within the timeout
+        # no more CPU time for the child process
+        kill_process(pid, 9) if sig == "HUP"
+      rescue Errno::ESRCH, Errno::ECHILD # Process has already exited
+      end
     end
 
     def child_processes
-      # Process.pid is this process, Process.getpgrp is resque, $? is the process that ran the ps
-      kill_not_required = [Process.pid, Process.getpgrp, $?.pid]
-      processes_to_kill = all_related_processes - kill_not_required
+      descendants = Hash.new{|ht,k| ht[k] = [k] }
+      Hash[*`ps -eo pid,ppid`.scan(/\d+/).map(&:to_i)].each do |pid, ppid|
+        descendants[ppid] << descendants[pid]
+      end
+      ps_pid = $?.pid
+      descendants[Process.pid].flatten - [Process.pid, ps_pid]
     end
 
     private
