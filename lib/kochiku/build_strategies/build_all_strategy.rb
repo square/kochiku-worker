@@ -53,12 +53,12 @@ module BuildStrategy
     end
 
     def child_processes
-      descendants = Hash.new{|ht,k| ht[k]=[k]}
-      Hash[*`ps -eo pid,ppid`.scan(/\d+/).map{|x|x.to_i}].each{|pid,ppid|
+      descendants = Hash.new{|ht,k| ht[k] = [k] }
+      Hash[*`ps -eo pid,ppid`.scan(/\d+/).map(&:to_i)].each do |pid, ppid|
         descendants[ppid] << descendants[pid]
-      }
+      end
       ps_pid = $?.pid
-      descendants[base].flatten - [base, ps_pid]
+      descendants[Process.pid].flatten - [Process.pid, ps_pid]
     end
 
     private
