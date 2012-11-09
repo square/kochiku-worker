@@ -41,8 +41,8 @@ module BuildStrategy
     def kill_process(pid, sig = "HUP")
       begin
         Timeout.timeout(10) do
-          Process.kill(sig, process_to_kill)
-          Process.wait(process_to_kill)
+          Process.kill(sig, pid)
+          Process.wait(pid)
         end
       rescue Timeout::Error
         # The process did not exit from SIGHUP within the timeout
