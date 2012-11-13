@@ -33,7 +33,7 @@ module BuildStrategy
     end
 
     def kill_all_child_processes
-      child_processes.each do |process_to_kill|
+      (child_processes | processes_in_same_group).each do |process_to_kill|
         kill_process(process_to_kill)
       end
     end
@@ -59,6 +59,12 @@ module BuildStrategy
       end
       ps_pid = $?.pid
       descendants[Process.pid].flatten - [Process.pid, ps_pid]
+    end
+
+    def processes_in_same_group
+      `ps -eo pid,pgid`.split("\n").slice(1..-1).map  {|s| s.strip.split(/\s+/).map(&:to_i) }.map do |process_info|
+        process_info.first if process_info.last == Process.getpgrp
+      end.compact - [Process.pid, Process.ppid, Process.getpgrp, $?.pid]
     end
 
     private
