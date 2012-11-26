@@ -36,6 +36,9 @@ module BuildStrategy
       (child_processes | processes_in_same_group).each do |process_to_kill|
         kill_process(process_to_kill)
       end
+      File.open(LOG_FILE, 'a') do |file|
+        file.write("\n\n******** Process taking too long, Kochiku killing it NOW ************\n")
+      end
     end
 
     def kill_process(pid, sig = "HUP")
