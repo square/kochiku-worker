@@ -11,6 +11,8 @@ begin
   RSpec::Core::RakeTask.new(:spec) do |t|
     t.pattern = 'spec/**/*_spec.rb'
   end
+
+  task :default => :spec
 rescue LoadError => e
   # We get this error on the deployed workers because rspec is our test bundle and not deployed
   puts "#{e}"
