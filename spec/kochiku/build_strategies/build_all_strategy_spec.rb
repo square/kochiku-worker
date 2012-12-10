@@ -34,15 +34,6 @@ describe BuildStrategy::BuildAllStrategy do
     end
   end
 
-  describe "#all_related_processes" do
-    it "should return only process ids" do
-      related_processes = subject.all_related_processes
-      related_processes.should include(Process.pid)
-      related_processes.should include(Process.getpgrp)
-      related_processes.should include($?.pid)
-    end
-  end
-
   describe "#child_processes" do
     it "only includes processes still running that are not this process or its parent" do
       Process.spawn("sleep 3")
