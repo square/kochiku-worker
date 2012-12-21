@@ -13,8 +13,12 @@ class BuildAttemptJob < JobBase
     @options = build_options["options"]
   end
 
+  def logger
+    Kochiku::Worker.logger
+  end
+
   def perform
-    Kochiku::Worker.logger.info("Build Attempt #{@build_attempt_id} perform starting")
+    logger.info("Build Attempt #{@build_attempt_id} perform starting")
     build_status = signal_build_is_starting
     return if build_status == :aborted
 
@@ -33,7 +37,7 @@ class BuildAttemptJob < JobBase
       end
       upload_artifact_file(message)
     end
-    Kochiku::Worker.logger.info("Build Attempt #{@build_attempt_id} perform finished")
+    logger.info("Build Attempt #{@build_attempt_id} perform finished")
   end
 
   def collect_artifacts(artifacts_glob)
@@ -50,8 +54,8 @@ class BuildAttemptJob < JobBase
 
   def on_exception(e)
     signal_build_is_finished(:errored)
-    Kochiku::Worker.logger.error("Exception during build (#{@build_attempt_id}) failed:")
-    Kochiku::Worker.logger.error(e)
+    logger.error("Exception during build (#{@build_attempt_id}) failed:")
+    logger.error(e)
     super
   end
 
@@ -62,7 +66,7 @@ class BuildAttemptJob < JobBase
   end
 
   def run_tests(build_kind, test_files, test_command, timeout, options)
-    Kochiku::Worker.logger.info("Running tests for #{@build_attempt_id}")
+    logger.info("Running tests for #{@build_attempt_id}")
     Kochiku::Worker.build_strategy.execute_build(build_kind, test_files, test_command, timeout, options)
   end
 
@@ -74,7 +78,7 @@ class BuildAttemptJob < JobBase
         result = RestClient::Request.execute(:method => :post, :url => build_start_url, :payload => {:builder => hostname}, :headers => {:accept => :json})
         JSON.parse(result)["build_attempt"]["state"].to_sym
       rescue RestClient::Exception => e
-        Kochiku::Worker.logger.error("Start of build (#{@build_attempt_id}) failed: #{e.message}")
+        logger.error("Start of build (#{@build_attempt_id}) failed: #{e.message}")
         raise
       end
     end
@@ -87,7 +91,7 @@ class BuildAttemptJob < JobBase
       begin
         RestClient::Request.execute(:method => :post, :url => build_finish_url, :payload => {:state => result}, :headers => {:accept => :json}, :timeout => 60, :open_timeout => 60)
       rescue RestClient::Exception => e
-        Kochiku::Worker.logger.error("Finish of build (#{@build_attempt_id}) failed: #{e.message}")
+        logger.error("Finish of build (#{@build_attempt_id}) failed: #{e.message}")
         raise
       end
     end
@@ -100,18 +104,18 @@ class BuildAttemptJob < JobBase
     begin
       RestClient::Request.execute(:method => :post, :url => artifact_upload_url, :payload => payload, :headers => {:accept => :xml}, :timeout => 60 * 5)
     rescue RestClient::Exception => e
-      Kochiku::Worker.logger.error("Upload of artifact (#{file.to_s}) failed: #{e.message}")
+      logger.error("Upload of artifact (#{file.to_s}) failed: #{e.message}")
     end
   end
 
   def benchmark(msg, &block)
-    Kochiku::Worker.logger.info("[#{msg}] starting")
+    logger.info("[#{msg}] starting")
     start_time = Time.now
     begin
       yield
     ensure
       end_time = Time.now
-      Kochiku::Worker.logger.info("[#{msg}] finished in #{end_time - start_time}")
+      logger.info("[#{msg}] finished in #{end_time - start_time}")
     end
   end
 end
