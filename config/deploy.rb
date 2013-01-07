@@ -1,6 +1,6 @@
 require "rvm/capistrano"
 set :rvm_type, :user
-set :rvm_ruby_string, 'ruby-1.9.3@kochiku-worker'
+set :rvm_ruby_string, 'ruby-1.9.3-p327@kochiku-worker'
 
 require 'bundler/capistrano' # adds bundle:install step to deploy pipeline
 
