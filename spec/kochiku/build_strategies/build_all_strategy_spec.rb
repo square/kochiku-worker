@@ -12,6 +12,8 @@ describe BuildStrategy::BuildAllStrategy do
   end
 
   describe "#execute_with_timeout" do
+    let(:log) { IO.readlines(BuildStrategy::BuildAllStrategy::LOG_FILE) }
+
     it "should not block and kill command if it takes too long" do
       start_time = Time.now
       subject.execute_with_timeout("sleep 3 #{dev_null}", 0.1).should == false
@@ -20,9 +22,15 @@ describe BuildStrategy::BuildAllStrategy do
         Process.kill(0, @spawned_pid)
       }.to raise_error(Errno::ESRCH)
 
-      log = IO.readlines(BuildStrategy::BuildAllStrategy::LOG_FILE)
       expected = "******** Process taking too long, Kochiku killing it NOW ************\n"
       log.last.should == expected
+    end
+
+    it "should not claim to have killed when it didn't" do
+      subject.execute_with_timeout "true", 0.1
+
+      expected = "******** Process taking too long, Kochiku killing it NOW ************\n"
+      log.last.should_not == expected
     end
 
     it "should return true if it succeeds" do
