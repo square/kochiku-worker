@@ -33,11 +33,16 @@ module BuildStrategy
     end
 
     def kill_all_child_processes
+      did_kill = false
       (child_processes | processes_in_same_group).each do |process_to_kill|
         kill_process(process_to_kill)
+        did_kill ||= true
       end
-      File.open(LOG_FILE, 'a') do |file|
-        file.write("\n\n******** Process taking too long, Kochiku killing it NOW ************\n")
+
+      if did_kill
+        File.open(LOG_FILE, 'a') do |file|
+          file.write("\n\n******** Process taking too long, Kochiku killing it NOW ************\n")
+        end
       end
     end
 
