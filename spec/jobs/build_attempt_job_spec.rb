@@ -25,7 +25,7 @@ describe BuildAttemptJob do
 
   describe "#perform" do
     before do
-      Kochiku::Worker::GitRepo.stub(:run!)
+      Kochiku::Worker::GitRepo.stub(:system).and_return(true)
     end
 
     context "build_attempt has been aborted" do

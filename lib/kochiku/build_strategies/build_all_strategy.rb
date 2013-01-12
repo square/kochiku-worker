@@ -76,11 +76,12 @@ module BuildStrategy
     end
 
     private
+
     def ci_command(build_kind, test_files, test_command, options)
       rvm_command = if options && options["rvm"]
         "rvm --install use #{options["rvm"]}"
       else
-        "source .rvmrc"
+        "if [ -e '.rvmrc' ]; then source .rvmrc; fi"
       end
       ("env -i HOME=$HOME"+
       " PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/X11/bin:/usr/local/share/python:/usr/pgsql-9.1/bin:$M2"+

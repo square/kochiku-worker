@@ -3,6 +3,7 @@ require 'cocaine'
 module Kochiku
   module Worker
     class GitRepo
+      class RefNotFoundError < StandardError; end
       WORKING_DIR = File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'tmp', 'build-partition'))
 
       class << self
@@ -23,6 +24,8 @@ module Kochiku
             run! "git clone #{cached_repo_path} #{dir}"
 
             Dir.chdir(dir) do
+              raise RefNotFoundError unless system("git rev-parse --quiet --verify #{ref}")
+
               run! "git checkout --quiet #{ref}"
 
               run! "git submodule --quiet init"

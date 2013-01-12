@@ -18,29 +18,31 @@ class BuildAttemptJob < JobBase
     build_status = signal_build_is_starting
     return if build_status == :aborted
 
-    Kochiku::Worker::GitRepo.inside_copy(@repo_name, @repo_url, @build_ref) do
-      result = run_tests(@build_kind, @test_files, @test_command, @timeout, @options) ? :passed : :failed
-      signal_build_is_finished(result)
-      collect_artifacts(Kochiku::Worker.build_strategy.artifacts_glob)
+    begin
+      Kochiku::Worker::GitRepo.inside_copy(@repo_name, @repo_url, @build_ref) do
+        result = run_tests(@build_kind, @test_files, @test_command, @timeout, @options) ? :passed : :failed
+        signal_build_is_finished(result)
+        collect_artifacts(Kochiku::Worker.build_strategy.artifacts_glob)
+      end
+    rescue Kochiku::Worker::GitRepo::RefNotFoundError => e
+      signal_build_is_finished(:failed)
+      message = StringIO.new("Build Ref #{@build_ref} not found in #{@repo_name} repo")
+      # Need to override path method for RestClient to upload this correctly
+      def message.path
+        'error.txt'
+      end
+      upload_artifact_file(message)
     end
     Kochiku::Worker.logger.info("Build Attempt #{@build_attempt_id} perform finished")
   end
 
   def collect_artifacts(artifacts_glob)
     benchmark("Build Attempt #{@build_attempt_id} collecting artifacts") do
-      artifact_upload_url = "http://#{Kochiku::Worker.settings.build_master}/build_attempts/#{@build_attempt_id}/build_artifacts"
-
       Dir[*artifacts_glob].each do |path|
         if File.file?(path) && !File.zero?(path)
           Cocaine::CommandLine.new("gzip", path).run
           path += '.gz'
-
-          payload = {:build_artifact => {:log_file => File.new(path)}}
-          begin
-            RestClient::Request.execute(:method => :post, :url => artifact_upload_url, :payload => payload, :headers => {:accept => :xml}, :timeout => 60 * 5)
-          rescue RestClient::Exception => e
-            Kochiku::Worker.logger.error("Upload of artifact (#{path}) failed: #{e.message}")
-          end
+          upload_artifact_file(File.new(path))
         end
       end
     end
@@ -50,7 +52,7 @@ class BuildAttemptJob < JobBase
     signal_build_is_finished(:errored)
     Kochiku::Worker.logger.error("Exception during build (#{@build_attempt_id}) failed:")
     Kochiku::Worker.logger.error(e)
-    raise e
+    super
   end
 
   private
@@ -88,6 +90,17 @@ class BuildAttemptJob < JobBase
         Kochiku::Worker.logger.error("Finish of build (#{@build_attempt_id}) failed: #{e.message}")
         raise
       end
+    end
+  end
+
+  def upload_artifact_file(file)
+    artifact_upload_url = "http://#{Kochiku::Worker.settings.build_master}/build_attempts/#{@build_attempt_id}/build_artifacts"
+
+    payload = {:build_artifact => {:log_file => file}}
+    begin
+      RestClient::Request.execute(:method => :post, :url => artifact_upload_url, :payload => payload, :headers => {:accept => :xml}, :timeout => 60 * 5)
+    rescue RestClient::Exception => e
+      Kochiku::Worker.logger.error("Upload of artifact (#{file.to_s}) failed: #{e.message}")
     end
   end
 
