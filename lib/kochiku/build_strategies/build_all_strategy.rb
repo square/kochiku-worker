@@ -78,8 +78,10 @@ module BuildStrategy
     private
 
     def ci_command(build_kind, test_files, test_command, options)
-      rvm_command = if options && options["rvm"]
-        "rvm --install use #{options["rvm"]}"
+      # TODO: Only support the "ruby" option once everyone switches over.
+      ruby = options && (options["ruby"] || options["rvm"])
+      ruby_command = if ruby
+        "rvm --install use #{ruby}"
       else
         "if [ -e '.rvmrc' ]; then source .rvmrc; fi"
       end
@@ -89,7 +91,7 @@ module BuildStrategy
       " TEST_RUNNER=#{build_kind}"+
       " MAVEN_OPTS='-Xms1024m -Xmx4096m -XX:PermSize=1024m -XX:MaxPermSize=2048m'"+
       " RUN_LIST=$TARGETS"+
-      " bash --noprofile --norc -c 'ruby -v ; source ~/.rvm/scripts/rvm ; #{rvm_command} ; #{test_command}'").gsub("$TARGETS", test_files.join(','))
+      " bash --noprofile --norc -c 'ruby -v ; source ~/.rvm/scripts/rvm ; #{ruby_command} ; #{test_command}'").gsub("$TARGETS", test_files.join(','))
     end
   end
 end
