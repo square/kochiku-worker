@@ -78,9 +78,7 @@ module BuildStrategy
     private
 
     def ci_command(build_kind, test_files, test_command, options)
-      # TODO: Only support the "ruby" option once everyone switches over.
-      ruby = options && (options["ruby"] || options["rvm"])
-      ruby_command = if ruby
+      ruby_command = if options && options["ruby"]
         "rvm --install use #{ruby}"
       else
         "if [ -e '.rvmrc' ]; then source .rvmrc; fi"
