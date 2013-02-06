@@ -79,7 +79,7 @@ module BuildStrategy
 
     def ci_command(build_kind, test_files, test_command, options)
       ruby_command = if options && options["ruby"]
-        "rvm --install use #{ruby}"
+        "rvm --install use #{options["ruby"]}"
       else
         "if [ -e '.rvmrc' ]; then source .rvmrc; fi"
       end
