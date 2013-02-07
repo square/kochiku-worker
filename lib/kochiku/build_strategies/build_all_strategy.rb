@@ -83,15 +83,13 @@ module BuildStrategy
       else
         "if [ -e '.rvmrc' ]; then source .rvmrc; fi"
       end
-        <<-EOC.gsub /^ +/m, ''
-        env -i HOME=$HOME \
-        PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/X11/bin:/usr/local/share/python:$M2 \
-        DISPLAY=localhost:1.0 \
-        TEST_RUNNER=#{build_kind} \
-        MAVEN_OPTS='-Xms1024m -Xmx4096m -XX:PermSize=1024m -XX:MaxPermSize=2048m' \
-        RUN_LIST=#{test_files.join(',')} \
-        bash --noprofile --norc -c 'ruby -v ; source ~/.rvm/scripts/rvm ; #{ruby_command} ; #{test_command}'
-        EOC
+      ("env -i HOME=$HOME"+
+      " PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/X11/bin:/usr/local/share/python:$M2"+
+      " DISPLAY=localhost:1.0" +
+      " TEST_RUNNER=#{build_kind}"+
+      " MAVEN_OPTS='-Xms1024m -Xmx4096m -XX:PermSize=1024m -XX:MaxPermSize=2048m'"+
+      " RUN_LIST=$TARGETS"+
+      " bash --noprofile --norc -c 'ruby -v ; source ~/.rvm/scripts/rvm ; #{ruby_command} ; #{test_command}'").gsub("$TARGETS", test_files.join(','))
     end
   end
 end
