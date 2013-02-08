@@ -3,9 +3,11 @@
 <plist version="1.0">
   <dict>
     <key>Label</key>                <string>com.squareup.kochiku-worker-1</string>
-    <key>Program</key>              <string>/Users/square/.rvm/bin/kochiku_rake</string>
+    <key>Program</key>              <string>/Users/square/.rvm/bin/kochiku_bundle</string>
     <key>ProgramArguments</key>     <array>
                                     <string> </string>
+                                    <string>exec</string>
+                                    <string>rake</string>
                                     <string>resque:work</string>
                                     <string>--trace</string>
                                     </array>
