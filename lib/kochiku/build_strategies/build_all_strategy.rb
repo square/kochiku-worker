@@ -1,3 +1,5 @@
+require 'kochiku/build_strategies/log_exception'
+
 module BuildStrategy
   class BuildAllStrategy
     LOG_FILE = "log/stdout.log"
@@ -23,12 +25,10 @@ module BuildStrategy
         Timeout.timeout(timeout) do
           Process.wait(pid)
         end
-        exit_status = $?.exitstatus == 0
+        $?.exitstatus == 0
+      ensure
         kill_all_child_processes
-        exit_status
-      rescue Timeout::Error
-        kill_all_child_processes
-        false
+        check_log_for_errors!
       end
     end
 
@@ -90,6 +90,22 @@ module BuildStrategy
       " MAVEN_OPTS='-Xms1024m -Xmx4096m -XX:PermSize=1024m -XX:MaxPermSize=2048m'"+
       " RUN_LIST=$TARGETS"+
       " bash --noprofile --norc -c 'ruby -v ; source ~/.rvm/scripts/rvm ; #{ruby_command} ; #{test_command}'").gsub("$TARGETS", test_files.join(','))
+    end
+
+    def check_log_for_errors!
+      File.open(LOG_FILE) do |file|
+        file.each do |line|
+          raise LogException.new(line) if known_error?(line)
+        end
+      end
+    end
+
+    @@known_errors = Regexp.union([
+      "couldn't find resque worker",
+      "Resource temporarily unavailable"
+    ])
+    def known_error? line
+      line =~ @@known_errors
     end
   end
 end

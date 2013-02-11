@@ -79,13 +79,17 @@ describe BuildAttemptJob do
         stub_request(:post, "#{master_host}/build_attempts/#{build_attempt_id}/start").to_return(:body => {'build_attempt' => {'state' => 'running'}}.to_json)
         stub_request(:post, "#{master_host}/build_attempts/#{build_attempt_id}/finish")
 
-        subject.should_receive(:run_tests).and_raise(StandardError)
+        subject.should_receive(:run_tests).and_raise(StandardError.new('something went wrong'))
         BuildAttemptJob.should_receive(:new).and_return(subject)
         Kochiku::Worker.logger.stub(:error)
 
         expect { BuildAttemptJob.perform(build_options) }.to raise_error(StandardError)
 
         WebMock.should have_requested(:post, "#{master_host}/build_attempts/#{build_attempt_id}/finish").with(:body => {"state"=> "errored"})
+        WebMock.should have_requested(:post, "#{master_host}/build_attempts/#{build_attempt_id}/build_artifacts").with(
+          :headers => {'Content-Type' => /multipart\/form-data/},
+          :body => /error.txt/
+        )
       end
     end
   end

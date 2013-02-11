@@ -1,0 +1,2 @@
+class LogException < Exception
+end

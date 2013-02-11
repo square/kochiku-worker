@@ -24,7 +24,7 @@ module Kochiku
             run! "git clone #{cached_repo_path} #{dir}"
 
             Dir.chdir(dir) do
-              raise RefNotFoundError unless system("git rev-list --quiet -n1 #{ref}")
+              raise RefNotFoundError.new("Build Ref #{ref} not found in #{repo_url}") unless system("git rev-list --quiet -n1 #{ref}")
 
               run! "git checkout --quiet #{ref}"
 
