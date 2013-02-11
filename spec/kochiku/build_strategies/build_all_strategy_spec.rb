@@ -16,7 +16,9 @@ describe BuildStrategy::BuildAllStrategy do
 
     it "should not block and kill command if it takes too long" do
       start_time = Time.now
-      subject.execute_with_timeout("sleep 3 #{dev_null}", 0.1).should == false
+      expect {
+        subject.execute_with_timeout("sleep 3 #{dev_null}", 0.1).should == false
+      }.to raise_error(Timeout::Error)
       (Time.now - start_time).should be_within(0.3).of(0.1)
       expect {
         Process.kill(0, @spawned_pid)

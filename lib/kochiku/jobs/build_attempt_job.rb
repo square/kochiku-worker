@@ -28,6 +28,9 @@ class BuildAttemptJob < JobBase
         signal_build_is_finished(result)
         collect_artifacts(Kochiku::Worker.build_strategy.artifacts_glob)
       end
+    rescue Timeout::Error => e
+      signal_build_is_finished(:errored)
+      collect_artifacts(Kochiku::Worker.build_strategy.artifacts_glob)
     rescue Kochiku::Worker::GitRepo::RefNotFoundError => e
       signal_build_is_finished(:errored)
       message = StringIO.new("Build Ref #{@build_ref} not found in #{@repo_name} repo")

@@ -28,7 +28,7 @@ module BuildStrategy
         exit_status
       rescue Timeout::Error
         kill_all_child_processes
-        false
+        raise
       end
     end
 
