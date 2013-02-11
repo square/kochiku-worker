@@ -48,7 +48,9 @@ class BuildAttemptJob < JobBase
 
     signal_build_is_finished(:errored)
     collect_artifacts(Kochiku::Worker.build_strategy.artifacts_glob)
-    message = StringIO.new("Build Ref #{@build_ref} not found in #{@repo_name} repo")
+    message = StringIO.new
+    message.puts(e.message)
+    message.puts(e.backtrace)
     # Need to override path method for RestClient to upload this correctly
     def message.path
       'error.txt'
