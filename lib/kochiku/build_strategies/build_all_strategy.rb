@@ -23,12 +23,9 @@ module BuildStrategy
         Timeout.timeout(timeout) do
           Process.wait(pid)
         end
-        exit_status = $?.exitstatus == 0
+        $?.exitstatus == 0
+      ensure
         kill_all_child_processes
-        exit_status
-      rescue Timeout::Error
-        kill_all_child_processes
-        raise
       end
     end
 
