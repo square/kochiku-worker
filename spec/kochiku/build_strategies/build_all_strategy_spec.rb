@@ -42,6 +42,12 @@ describe BuildStrategy::BuildAllStrategy do
     it "should return false if it fails" do
       subject.execute_with_timeout("ls /tmp/afilethatdoesnotexist #{dev_null}", 0.1).should == false
     end
+
+    it "should raise a LogException for known errors in output" do
+      expect {
+        subject.execute_with_timeout("echo 'couldn\'t find resque worker'", 0.1)
+      }.to raise_error(LogException)
+    end
   end
 
   describe "#child_processes" do

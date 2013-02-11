@@ -22,23 +22,10 @@ class BuildAttemptJob < JobBase
     build_status = signal_build_is_starting
     return if build_status == :aborted
 
-    begin
-      Kochiku::Worker::GitRepo.inside_copy(@repo_name, @repo_url, @build_ref) do
-        result = run_tests(@build_kind, @test_files, @test_command, @timeout, @options) ? :passed : :failed
-        signal_build_is_finished(result)
-        collect_artifacts(Kochiku::Worker.build_strategy.artifacts_glob)
-      end
-    rescue Timeout::Error => e
-      signal_build_is_finished(:errored)
+    Kochiku::Worker::GitRepo.inside_copy(@repo_name, @repo_url, @build_ref) do
+      result = run_tests(@build_kind, @test_files, @test_command, @timeout, @options) ? :passed : :failed
+      signal_build_is_finished(result)
       collect_artifacts(Kochiku::Worker.build_strategy.artifacts_glob)
-    rescue Kochiku::Worker::GitRepo::RefNotFoundError => e
-      signal_build_is_finished(:errored)
-      message = StringIO.new("Build Ref #{@build_ref} not found in #{@repo_name} repo")
-      # Need to override path method for RestClient to upload this correctly
-      def message.path
-        'error.txt'
-      end
-      upload_artifact_file(message)
     end
     logger.info("Build Attempt #{@build_attempt_id} perform finished")
   end
@@ -56,9 +43,18 @@ class BuildAttemptJob < JobBase
   end
 
   def on_exception(e)
-    signal_build_is_finished(:errored)
     logger.error("Exception during build (#{@build_attempt_id}) failed:")
     logger.error(e)
+
+    signal_build_is_finished(:errored)
+    collect_artifacts(Kochiku::Worker.build_strategy.artifacts_glob)
+    message = StringIO.new("Build Ref #{@build_ref} not found in #{@repo_name} repo")
+    # Need to override path method for RestClient to upload this correctly
+    def message.path
+      'error.txt'
+    end
+    upload_artifact_file(message)
+
     super
   end
 
