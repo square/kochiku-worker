@@ -29,7 +29,7 @@ class BuildAttemptJob < JobBase
         collect_artifacts(Kochiku::Worker.build_strategy.artifacts_glob)
       end
     rescue Kochiku::Worker::GitRepo::RefNotFoundError => e
-      signal_build_is_finished(:failed)
+      signal_build_is_finished(:errored)
       message = StringIO.new("Build Ref #{@build_ref} not found in #{@repo_name} repo")
       # Need to override path method for RestClient to upload this correctly
       def message.path
