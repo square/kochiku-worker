@@ -49,7 +49,6 @@ class BuildAttemptJob < JobBase
     logger.error("Exception during build (#{@build_attempt_id}) failed:")
     logger.error(e)
 
-    signal_build_is_finished(:errored)
     message = StringIO.new
     message.puts(e.message)
     message.puts(e.backtrace)
@@ -59,6 +58,10 @@ class BuildAttemptJob < JobBase
       'error.txt'
     end
     upload_artifact_file(message)
+
+    # Signal build is errored after error.txt is uploaded so we can
+    # reference error.txt in the build_attempt observer on the master.
+    signal_build_is_finished(:errored)
 
     super
   end
@@ -104,9 +107,8 @@ class BuildAttemptJob < JobBase
   def upload_artifact_file(file)
     artifact_upload_url = "http://#{Kochiku::Worker.settings.build_master}/build_attempts/#{@build_attempt_id}/build_artifacts"
 
-    payload = {:build_artifact => {:log_file => file}}
     begin
-      RestClient::Request.execute(:method => :post, :url => artifact_upload_url, :payload => payload, :headers => {:accept => :xml}, :timeout => 60 * 5)
+      RestClient::Request.execute(:method => :post, :url => artifact_upload_url, :payload => {:build_artifact => {:log_file => file}}, :headers => {:accept => :xml}, :timeout => 60 * 5)
     rescue RestClient::Exception => e
       logger.error("Upload of artifact (#{file.to_s}) failed: #{e.message}")
     end
