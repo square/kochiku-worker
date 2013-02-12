@@ -21,6 +21,7 @@
                                       <key>QUEUES</key> <string>ci-jasmine,developer-jasmine,ci-spec,developer-spec</string>
                                       <key>PIDFILE</key> <string>/Users/square/kochiku-worker/shared/pids/resque1.pid</string>
                                       <key>PATH</key> <string>/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/usr/X11/bin</string>
+                                      <key>TERM_CHILD</key> <string>1</string>
                                     </dict>
   </dict>
 </plist>

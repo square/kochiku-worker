@@ -15,5 +15,5 @@ begin
   task :default => :spec
 rescue LoadError => e
   # We get this error on the deployed workers because rspec is our test bundle and not deployed
-  puts "#{e}"
+  raise unless e.message.include?('rspec/core/rake_task')
 end
