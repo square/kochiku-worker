@@ -53,6 +53,7 @@ class BuildAttemptJob < JobBase
     message = StringIO.new
     message.puts(e.message)
     message.puts(e.backtrace)
+    message.rewind
     # Need to override path method for RestClient to upload this correctly
     def message.path
       'error.txt'

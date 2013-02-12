@@ -88,7 +88,7 @@ describe BuildAttemptJob do
         WebMock.should have_requested(:post, "#{master_host}/build_attempts/#{build_attempt_id}/finish").with(:body => {"state"=> "errored"})
         WebMock.should have_requested(:post, "#{master_host}/build_attempts/#{build_attempt_id}/build_artifacts").with(
           :headers => {'Content-Type' => /multipart\/form-data/},
-          :body => /error.txt/
+          :body => /something went wrong/
         )
       end
     end
