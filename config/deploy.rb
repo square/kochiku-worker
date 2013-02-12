@@ -36,7 +36,7 @@ namespace :deploy do
   desc "Restart the EC2 workers"
   task :restart_ec2_workers, :roles => :ec2_worker do
     run <<-CMD
-      running_kochiku_flavors=$(sudo monit summary | grep running | egrep -o 'kochiku-worker-(ci|web-cucumber|web-spec)');
+      running_kochiku_flavors=$(sudo monit summary | grep running | egrep -o 'kochiku-worker-(ci|web-cucumber|web-spec|spec-ci)');
       for flavor in $running_kochiku_flavors; do
         sudo monit restart $flavor;
       done;
