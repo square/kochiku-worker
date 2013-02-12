@@ -23,9 +23,12 @@ class BuildAttemptJob < JobBase
     return if build_status == :aborted
 
     Kochiku::Worker::GitRepo.inside_copy(@repo_name, @repo_url, @build_ref) do
-      result = run_tests(@build_kind, @test_files, @test_command, @timeout, @options) ? :passed : :failed
-      signal_build_is_finished(result)
-      collect_artifacts(Kochiku::Worker.build_strategy.artifacts_glob)
+      begin
+        result = run_tests(@build_kind, @test_files, @test_command, @timeout, @options) ? :passed : :failed
+        signal_build_is_finished(result)
+      ensure
+        collect_artifacts(Kochiku::Worker.build_strategy.artifacts_glob)
+      end
     end
     logger.info("Build Attempt #{@build_attempt_id} perform finished")
   end
@@ -47,7 +50,6 @@ class BuildAttemptJob < JobBase
     logger.error(e)
 
     signal_build_is_finished(:errored)
-    collect_artifacts(Kochiku::Worker.build_strategy.artifacts_glob)
     message = StringIO.new
     message.puts(e.message)
     message.puts(e.backtrace)
