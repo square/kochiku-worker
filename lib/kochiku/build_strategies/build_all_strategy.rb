@@ -93,7 +93,7 @@ module BuildStrategy
     end
 
     def check_log_for_errors!
-      File.open(LOG_FILE) do |file|
+      File.open(LOG_FILE, :encoding => 'UTF-8') do |file|
         file.each do |line|
           raise ErrorFoundInLogError.new(line) if known_error?(line)
         end
@@ -106,7 +106,6 @@ module BuildStrategy
       "Can't connect to local MySQL server through socket"
     ])
     def known_error?(line)
-      Kochiku::Worker.logger.error "line: #{line.inspect}"
       line =~ @@known_errors
     end
   end
