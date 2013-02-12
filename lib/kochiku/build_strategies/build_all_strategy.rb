@@ -1,7 +1,7 @@
-require 'kochiku/build_strategies/log_exception'
-
 module BuildStrategy
   class BuildAllStrategy
+    class ErrorFoundInLogError < StandardError; end
+
     LOG_FILE = "log/stdout.log"
 
     def execute_build(build_kind, test_files, test_command, timeout, options)
@@ -95,7 +95,7 @@ module BuildStrategy
     def check_log_for_errors!
       File.open(LOG_FILE) do |file|
         file.each do |line|
-          raise LogException.new(line) if known_error?(line)
+          raise ErrorFoundInLogError.new(line) if known_error?(line)
         end
       end
     end

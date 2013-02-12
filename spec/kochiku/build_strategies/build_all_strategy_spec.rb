@@ -43,10 +43,10 @@ describe BuildStrategy::BuildAllStrategy do
       subject.execute_with_timeout("ls /tmp/afilethatdoesnotexist #{dev_null}", 0.1).should == false
     end
 
-    it "should raise a LogException for known errors in output" do
+    it "should raise a ErrorFoundInLogError for known errors in output" do
       expect {
         subject.execute_with_timeout("echo 'couldn\'t find resque worker'", 0.1)
-      }.to raise_error(LogException)
+      }.to raise_error(BuildStrategy::BuildAllStrategy::ErrorFoundInLogError)
     end
   end
 
