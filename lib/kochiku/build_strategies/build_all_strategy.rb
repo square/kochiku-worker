@@ -105,7 +105,8 @@ module BuildStrategy
       "Resource temporarily unavailable",
       "Can't connect to local MySQL server through socket"
     ])
-    def known_error? line
+    def known_error?(line)
+      Kochiku::Worker.logger.error "line: #{line.inspect}"
       line =~ @@known_errors
     end
   end
