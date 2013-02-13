@@ -103,7 +103,8 @@ module BuildStrategy
     @@known_errors = Regexp.union([
       "couldn't find resque worker",
       "Resource temporarily unavailable",
-      "Can't connect to local MySQL server through socket"
+      "Can't connect to local MySQL server through socket",
+      "cucumber processes did not come up"
     ])
     def known_error?(line)
       line =~ @@known_errors
