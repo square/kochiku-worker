@@ -89,7 +89,7 @@ module BuildStrategy
       " TEST_RUNNER=#{build_kind}"+
       " MAVEN_OPTS='-Xms1024m -Xmx4096m -XX:PermSize=1024m -XX:MaxPermSize=2048m'"+
       " RUN_LIST=$TARGETS"+
-      " bash --noprofile --norc -c 'ruby -v ; source ~/.rvm/scripts/rvm ; #{ruby_command} ; #{test_command}'").gsub("$TARGETS", test_files.join(','))
+      " bash --noprofile --norc -c 'source ~/.rvm/scripts/rvm ; #{ruby_command} ; ruby -v ; #{test_command}'").gsub("$TARGETS", test_files.join(','))
     end
 
     def check_log_for_errors!
