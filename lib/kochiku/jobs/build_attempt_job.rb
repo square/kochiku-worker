@@ -85,7 +85,7 @@ class BuildAttemptJob < JobBase
         result = RestClient::Request.execute(:method => :post, :url => build_start_url, :payload => {:builder => hostname}, :headers => {:accept => :json})
         JSON.parse(result)["build_attempt"]["state"].to_sym
       rescue RestClient::Exception => e
-        logger.error("Start of build (#{@build_attempt_id}) failed: #{e.message}")
+        logger.error("Start notification of build (#{@build_attempt_id}) failed: #{e.message}")
         raise
       end
     end
@@ -98,7 +98,7 @@ class BuildAttemptJob < JobBase
       begin
         RestClient::Request.execute(:method => :post, :url => build_finish_url, :payload => {:state => result}, :headers => {:accept => :json}, :timeout => 60, :open_timeout => 60)
       rescue RestClient::Exception => e
-        logger.error("Finish of build (#{@build_attempt_id}) failed: #{e.message}")
+        logger.error("Finish notification of build (#{@build_attempt_id}) failed: #{e.message}")
         raise
       end
     end
