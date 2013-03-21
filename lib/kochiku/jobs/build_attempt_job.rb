@@ -46,7 +46,13 @@ class BuildAttemptJob < JobBase
   end
 
   def on_exception(e)
-    logger.error("Exception during build (#{@build_attempt_id}) failed:")
+    if e.instance_of? Kochiku::Worker::GitRepo::RefNotFoundError
+      handle_git_ref_not_found(e)
+      # avoid calling super because this does not need to go into the failed queue
+      return
+    end
+
+    logger.error("Exception occurred during build (#{@build_attempt_id}):")
     logger.error(e)
 
     message = StringIO.new
@@ -85,7 +91,7 @@ class BuildAttemptJob < JobBase
         result = RestClient::Request.execute(:method => :post, :url => build_start_url, :payload => {:builder => hostname}, :headers => {:accept => :json})
         JSON.parse(result)["build_attempt"]["state"].to_sym
       rescue RestClient::Exception => e
-        logger.error("Start of build (#{@build_attempt_id}) failed: #{e.message}")
+        logger.error("Start notification of build (#{@build_attempt_id}) failed: #{e.message}")
         raise
       end
     end
@@ -98,7 +104,7 @@ class BuildAttemptJob < JobBase
       begin
         RestClient::Request.execute(:method => :post, :url => build_finish_url, :payload => {:state => result}, :headers => {:accept => :json}, :timeout => 60, :open_timeout => 60)
       rescue RestClient::Exception => e
-        logger.error("Finish of build (#{@build_attempt_id}) failed: #{e.message}")
+        logger.error("Finish notification of build (#{@build_attempt_id}) failed: #{e.message}")
         raise
       end
     end
@@ -112,6 +118,23 @@ class BuildAttemptJob < JobBase
     rescue RestClient::Exception => e
       logger.error("Upload of artifact (#{file.to_s}) failed: #{e.message}")
     end
+  end
+
+  def handle_git_ref_not_found(exception)
+    logger.warn("#{exception.class} during build attempt (#{@build_attempt_id}):")
+    logger.warn(exception.message)
+
+    message = StringIO.new
+    message.puts(exception.message)
+    message.puts(exception.backtrace)
+    message.rewind
+    # Need to override path method for RestClient to upload this correctly
+    def message.path
+      'aborted.txt'
+    end
+    upload_artifact_file(message)
+
+    signal_build_is_finished(:aborted)
   end
 
   def benchmark(msg, &block)

@@ -75,21 +75,41 @@ describe BuildAttemptJob do
     end
 
     context "an exception occurs" do
+      class FakeTestError < StandardError; end
+
       it "sets the build attempt state to errored" do
         stub_request(:post, "#{master_host}/build_attempts/#{build_attempt_id}/start").to_return(:body => {'build_attempt' => {'state' => 'running'}}.to_json)
         stub_request(:post, "#{master_host}/build_attempts/#{build_attempt_id}/build_artifacts")
+        stub_request(:post, "#{master_host}/build_attempts/#{build_attempt_id}/finish").to_return(:head => :ok)
 
-        subject.should_receive(:run_tests).and_raise(StandardError.new('something went wrong'))
+        subject.should_receive(:run_tests).and_raise(FakeTestError.new('something went wrong'))
         BuildAttemptJob.should_receive(:new).and_return(subject)
         Kochiku::Worker.logger.stub(:error)
 
-        expect { BuildAttemptJob.perform(build_options) }.to raise_error(StandardError)
+        expect { BuildAttemptJob.perform(build_options) }.to raise_error(FakeTestError)
 
         WebMock.should have_requested(:post, "#{master_host}/build_attempts/#{build_attempt_id}/build_artifacts").with(
           :headers => {'Content-Type' => /multipart\/form-data/},
           :body => /something went wrong/
         )
         WebMock.should have_requested(:post, "#{master_host}/build_attempts/#{build_attempt_id}/finish").with(:body => {"state" => "errored"})
+      end
+
+      context "and its GitRepo::RefNotFoundError" do
+        it "sets the build attempt state to aborted" do
+          stub_request(:post, "#{master_host}/build_attempts/#{build_attempt_id}/start").to_return(:body => {'build_attempt' => {'state' => 'running'}}.to_json)
+          stub_request(:post, "#{master_host}/build_attempts/#{build_attempt_id}/build_artifacts")
+          stub_request(:post, "#{master_host}/build_attempts/#{build_attempt_id}/finish").to_return(:head => :ok)
+
+          subject.should_receive(:run_tests).and_raise(Kochiku::Worker::GitRepo::RefNotFoundError.new)
+          BuildAttemptJob.should_receive(:new).and_return(subject)
+          Kochiku::Worker.logger.stub(:warn)
+
+          expect { BuildAttemptJob.perform(build_options) }.to_not raise_error
+
+          WebMock.should have_requested(:post, "#{master_host}/build_attempts/#{build_attempt_id}/build_artifacts")
+          WebMock.should have_requested(:post, "#{master_host}/build_attempts/#{build_attempt_id}/finish").with(:body => {"state" => "aborted"})
+        end
       end
     end
   end
