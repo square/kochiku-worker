@@ -46,7 +46,13 @@ class BuildAttemptJob < JobBase
   end
 
   def on_exception(e)
-    logger.error("Exception during build (#{@build_attempt_id}) failed:")
+    if e.instance_of? Kochiku::Worker::GitRepo::RefNotFoundError
+      handle_git_ref_not_found(e)
+      # avoid calling super because this does not need to go into the failed queue
+      return
+    end
+
+    logger.error("Exception occurred during build (#{@build_attempt_id}):")
     logger.error(e)
 
     message = StringIO.new
@@ -112,6 +118,23 @@ class BuildAttemptJob < JobBase
     rescue RestClient::Exception => e
       logger.error("Upload of artifact (#{file.to_s}) failed: #{e.message}")
     end
+  end
+
+  def handle_git_ref_not_found(exception)
+    logger.warn("#{exception.class} during build attempt (#{@build_attempt_id}):")
+    logger.warn(exception.message)
+
+    message = StringIO.new
+    message.puts(exception.message)
+    message.puts(exception.backtrace)
+    message.rewind
+    # Need to override path method for RestClient to upload this correctly
+    def message.path
+      'aborted.txt'
+    end
+    upload_artifact_file(message)
+
+    signal_build_is_finished(:aborted)
   end
 
   def benchmark(msg, &block)
