@@ -81,7 +81,7 @@ module BuildStrategy
       ruby_command = if options && options["ruby"]
         "rvm --install use #{options["ruby"]}"
       else
-        "if [ -e '.rvmrc' ]; then source .rvmrc; fi"
+        "if [ -e .rvmrc ]; then source .rvmrc; elif [ -e .ruby-version ]; then rvm --install use $(cat .ruby-version); fi"
       end
       ("env -i HOME=$HOME"+
       " PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/X11/bin:/usr/local/share/python:$M2"+
