@@ -86,7 +86,7 @@ module BuildStrategy
         " TEST_RUNNER=#{build_kind}"+
         " MAVEN_OPTS='-Xms1024m -Xmx4096m -XX:PermSize=1024m -XX:MaxPermSize=2048m'"+
         " RUN_LIST=$TARGETS"+
-        " bash --noprofile --norc -c 'rvm install #{ruby} ; rvm #{ruby} do #{test_command}'"
+        " bash --noprofile --norc -c 'source ~/.rvm/scripts/rvm; rvm install #{ruby} ; rvm #{ruby} do #{test_command}'"
       ).gsub("$TARGETS", test_files.join(','))
     end
 
