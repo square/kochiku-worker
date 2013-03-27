@@ -77,19 +77,19 @@ module BuildStrategy
 
     private
 
-    def ci_command(build_kind, test_files, test_command, options)
-      ruby_command = if options && options["ruby"]
-        "rvm --install use #{options["ruby"]}"
-      else
-        "if [ -e .rvmrc ]; then source .rvmrc; elif [ -e .ruby-version ]; then rvm --install use $(cat .ruby-version); fi"
-      end
-      ("env -i HOME=$HOME"+
-      " PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/X11/bin:/usr/local/share/python:$M2"+
-      " DISPLAY=localhost:1.0" +
-      " TEST_RUNNER=#{build_kind}"+
-      " MAVEN_OPTS='-Xms1024m -Xmx4096m -XX:PermSize=1024m -XX:MaxPermSize=2048m'"+
-      " RUN_LIST=$TARGETS"+
-      " bash --noprofile --norc -c 'source ~/.rvm/scripts/rvm ; #{ruby_command} ; ruby -v ; #{test_command}'").gsub("$TARGETS", test_files.join(','))
+    def ci_command(build_kind, test_files, test_command, options={})
+      # this can be a version, or a path with .rvmrc or .ruby-version
+      # rvm install PATH is a valid invocation
+      ruby_spec = options["ruby"] || Dir.pwd
+      (
+        "env -i HOME=$HOME"+
+        " PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/X11/bin:/usr/local/share/python:$M2"+
+        " DISPLAY=localhost:1.0" +
+        " TEST_RUNNER=#{build_kind}"+
+        " MAVEN_OPTS='-Xms1024m -Xmx4096m -XX:PermSize=1024m -XX:MaxPermSize=2048m'"+
+        " RUN_LIST=$TARGETS"+
+        " bash --noprofile --norc -c 'rvm install #{ruby_spec} ; rvm #{ruby_spec} do #{test_command}'"
+      ).gsub("$TARGETS", test_files.join(','))
     end
 
     def check_log_for_errors!
@@ -100,12 +100,14 @@ module BuildStrategy
       end
     end
 
-    @@known_errors = Regexp.union([
-      "couldn't find resque worker",
-      "Resource temporarily unavailable",
-      "Can't connect to local MySQL server through socket",
-      "cucumber processes did not come up"
-    ])
+    @@known_errors = Regexp.union(
+      [
+        "couldn't find resque worker",
+        "Resource temporarily unavailable",
+        "Can't connect to local MySQL server through socket",
+        "cucumber processes did not come up"
+      ]
+    )
     def known_error?(line)
       line =~ @@known_errors
     end
