@@ -1,6 +1,6 @@
 require "rvm/capistrano"
 set :rvm_type, :user
-set :rvm_ruby_string, 'ruby-1.9.3-p327@kochiku-worker'
+set :rvm_ruby_string, 'ruby-1.9.3-p327'
 
 require 'bundler/capistrano' # adds bundle:install step to deploy pipeline
 
@@ -62,7 +62,6 @@ end
 
 namespace :kochiku do
   task :setup, :roles => [:mac_worker, :ec2_worker] do
-    run "rvm gemset create 'kochiku-worker'"
     run "gem install bundler -v '~> 1.1.0' --conservative"
     run "mkdir -p #{shared_path}/build-partition"
     run "[ -d #{shared_path}/build-partition/web-cache ] || #{scm_command} clone --recursive git@git.squareup.com:square/web.git #{shared_path}/build-partition/web-cache"
