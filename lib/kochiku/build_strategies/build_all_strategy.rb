@@ -79,9 +79,9 @@ module BuildStrategy
 
     def ci_command(build_kind, test_files, test_command, options)
       ruby_command = if options && options["ruby"]
-        "rvm --install use #{options["ruby"]}"
+        "rvm --install --create use #{options["ruby"]}"
       else
-        "if [ -e .rvmrc ]; then source .rvmrc; elif [ -e .ruby-version ]; then rvm --install use $(cat .ruby-version); fi"
+        "if [ -e .rvmrc ]; then source .rvmrc; elif [ -e .ruby-version ]; then rvm --install --create use $(cat .ruby-version); fi"
       end
       (
         "env -i HOME=$HOME" +
