@@ -8,6 +8,7 @@ class BuildAttemptJob < JobBase
     @test_files = build_options["test_files"]
     @repo_name = build_options["repo_name"]
     @test_command = build_options["test_command"]
+    @remote_name = build_options["remote_name"]
     @repo_url = build_options["repo_url"]
     @timeout = build_options["timeout"]
     @options = build_options["options"]
@@ -22,7 +23,7 @@ class BuildAttemptJob < JobBase
     build_status = signal_build_is_starting
     return if build_status == :aborted
 
-    Kochiku::Worker::GitRepo.inside_copy(@repo_name, @repo_url, @build_ref) do
+    Kochiku::Worker::GitRepo.inside_copy(@repo_name, @remote_name, @repo_url, @build_ref) do
       begin
         result = run_tests(@build_kind, @test_files, @test_command, @timeout, @options) ? :passed : :failed
         signal_build_is_finished(result)
