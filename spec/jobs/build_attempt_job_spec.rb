@@ -13,6 +13,7 @@ describe BuildAttemptJob do
       "build_kind" => build_part_kind,
       "test_files" => test_files,
       "repo_name" => 'web-cache',
+      "remote_name" => "origin",
       "test_command" => "script/ci worker",
       "repo_url" => "git@git.squareup.com:square/web.git"
   } }

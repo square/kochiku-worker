@@ -7,7 +7,7 @@ module Kochiku
       WORKING_DIR = File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'tmp', 'build-partition'))
 
       class << self
-        def inside_copy(cached_repo_name, repo_url, ref = "master")
+        def inside_copy(cached_repo_name, remote_name, repo_url, ref = "master")
           cached_repo_path = File.join(WORKING_DIR, cached_repo_name)
 
           if !File.directory?(cached_repo_path)
@@ -15,7 +15,12 @@ module Kochiku
           end
           Dir.chdir(cached_repo_path) do
             # update the cached repo
-            synchronize_with_remote
+            remote_list = `git remote -v | grep #{remote_name}`
+            unless remote_list.include?(remote_name)
+              run! "git remote add #{remote_name} #{remote_url}"
+            end
+            synchronize_with_remote(remote_name)
+            #TODO: doing this here is questionable - this may not work for forks
             Cocaine::CommandLine.new("git submodule update", "--init --quiet").run
           end
 
@@ -25,7 +30,6 @@ module Kochiku
 
             Dir.chdir(dir) do
               raise RefNotFoundError.new("Build Ref #{ref} not found in #{repo_url}") unless system("git rev-list --quiet -n1 #{ref}")
-
               run! "git checkout --quiet #{ref}"
 
               run! "git submodule --quiet init"
