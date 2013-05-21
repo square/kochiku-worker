@@ -7,7 +7,7 @@ module Kochiku
       WORKING_DIR = File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'tmp', 'build-partition'))
 
       class << self
-        def inside_copy(cached_repo_name, remote_name, repo_url, ref = "master")
+        def inside_copy(cached_repo_name, remote_name, repo_url, sha, branch)
           cached_repo_path = File.join(WORKING_DIR, cached_repo_name)
 
           if !File.directory?(cached_repo_path)
@@ -19,7 +19,7 @@ module Kochiku
             unless remote_list.include?(remote_name)
               run! "git remote add #{remote_name} #{remote_url}"
             end
-            synchronize_with_remote(remote_name)
+            synchronize_with_remote(remote_name, branch)
             #TODO: doing this here is questionable - this may not work for forks
             Cocaine::CommandLine.new("git submodule update", "--init --quiet").run
           end
@@ -29,8 +29,8 @@ module Kochiku
             run! "git clone #{cached_repo_path} #{dir}"
 
             Dir.chdir(dir) do
-              raise RefNotFoundError.new("Build Ref #{ref} not found in #{repo_url}") unless system("git rev-list --quiet -n1 #{ref}")
-              run! "git checkout --quiet #{ref}"
+              raise RefNotFoundError.new("Build Ref #{sha} not found in #{repo_url}") unless system("git rev-list --quiet -n1 #{sha}")
+              run! "git checkout --quiet #{sha}"
 
               run! "git submodule --quiet init"
               # redirect the submodules to the cached_repo
@@ -47,21 +47,12 @@ module Kochiku
           end
         end
 
-        def inside_repo(cached_repo_name)
-          cached_repo_path = File.join(WORKING_DIR, cached_repo_name)
-
-          Dir.chdir(cached_repo_path) do
-            synchronize_with_remote
-
-            yield
-          end
-        end
-
         def create_working_dir
           FileUtils.mkdir_p(WORKING_DIR)
         end
 
-      private
+        private
+
         def run!(cmd)
           unless system(cmd)
             raise "non-0 exit code #{$?} returned from [#{cmd}]"
@@ -72,8 +63,9 @@ module Kochiku
           Cocaine::CommandLine.new("git clone", "--recursive #{repo_url} #{cached_repo_path}").run
         end
 
-        def synchronize_with_remote(name = 'origin')
-          Cocaine::CommandLine.new("git fetch", "#{name} --quiet --prune").run
+        def synchronize_with_remote(name, branch = nil)
+          refspec = branch.to_s.empty? ? "" : "+#{branch}"
+          Cocaine::CommandLine.new("git fetch", "--quiet --prune --no-tags #{name} #{refspec}").run
         rescue Cocaine::ExitStatusError
           # likely caused by another 'git fetch' that is currently in progress. Wait a few seconds and try again
           tries = (tries || 0) + 1
