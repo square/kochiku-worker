@@ -105,6 +105,12 @@ class BuildAttemptJob < JobBase
 
       begin
         RestClient::Request.execute(:method => :post, :url => build_finish_url, :payload => {:state => result}, :headers => {:accept => :json}, :timeout => 60, :open_timeout => 60)
+      rescue Errno::EHOSTUNREACH
+        tries = (tries || 0) + 1
+        if tries < 2
+          sleep 1
+          retry
+        end
       rescue RestClient::Exception => e
         logger.error("Finish notification of build (#{@build_attempt_id}) failed: #{e.message}")
         raise
@@ -117,6 +123,12 @@ class BuildAttemptJob < JobBase
 
     begin
       RestClient::Request.execute(:method => :post, :url => artifact_upload_url, :payload => {:build_artifact => {:log_file => file}}, :headers => {:accept => :xml}, :timeout => 60 * 5)
+    rescue Errno::EHOSTUNREACH
+      tries = (tries || 0) + 1
+      if tries < 2
+        sleep 1
+        retry
+      end
     rescue RestClient::Exception => e
       logger.error("Upload of artifact (#{file.to_s}) failed: #{e.message}")
     end
