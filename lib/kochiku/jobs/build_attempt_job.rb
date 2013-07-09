@@ -9,10 +9,17 @@ class BuildAttemptJob < JobBase
     @test_files = build_options["test_files"]
     @repo_name = build_options["repo_name"]
     @test_command = build_options["test_command"]
+    @nexus_url = build_options["nexus_url"]
+    @nexus_repo_id = build_options["nexus_repo_id"]
+    @upload_artifact = build_options["upload_artifact"]
     @remote_name = build_options["remote_name"]
     @repo_url = build_options["repo_url"]
     @timeout = build_options["timeout"]
     @options = build_options["options"]
+  end
+
+  def sha
+    @build_ref
   end
 
   def logger
@@ -27,21 +34,24 @@ class BuildAttemptJob < JobBase
     Kochiku::Worker::GitRepo.inside_copy(@repo_name, @remote_name, @repo_url, @build_ref, @branch) do
       begin
         result = run_tests(@build_kind, @test_files, @test_command, @timeout, @options) ? :passed : :failed
+        if result == :passed && @upload_artifact
+          @test_files.each { |file| upload_artifact(file) }
+        end
         signal_build_is_finished(result)
       ensure
-        collect_artifacts(Kochiku::Worker.build_strategy.artifacts_glob)
+        collect_logs(Kochiku::Worker.build_strategy.log_files_glob)
       end
     end
     logger.info("Build Attempt #{@build_attempt_id} perform finished")
   end
 
-  def collect_artifacts(artifacts_glob)
-    benchmark("Build Attempt #{@build_attempt_id} collecting artifacts") do
-      Dir[*artifacts_glob].each do |path|
+  def collect_logs(file_glob)
+    benchmark("Build Attempt #{@build_attempt_id} collecting logs") do
+      Dir[*file_glob].each do |path|
         if File.file?(path) && !File.zero?(path)
           Cocaine::CommandLine.new("gzip", path).run
           path += '.gz'
-          upload_artifact_file(File.new(path))
+          upload_log_file(File.new(path))
         end
       end
     end
@@ -65,7 +75,8 @@ class BuildAttemptJob < JobBase
     def message.path
       'error.txt'
     end
-    upload_artifact_file(message)
+
+    upload_log_file(message)
 
     # Signal build is errored after error.txt is uploaded so we can
     # reference error.txt in the build_attempt observer on the master.
@@ -118,11 +129,29 @@ class BuildAttemptJob < JobBase
     end
   end
 
-  def upload_artifact_file(file)
-    artifact_upload_url = "http://#{Kochiku::Worker.settings.build_master}/build_attempts/#{@build_attempt_id}/build_artifacts"
+  def upload_artifact(mvn_module)
+    return unless @build_kind == 'maven'
+    benchmark("Uploading artifact for #{mvn_module}") do
+      shaded_jar = Dir.glob("#{mvn_module}/target/*-shaded.jar").first
+      command = ['mvn', 'org.apache.maven.plugins:maven-deploy-plugin:2.7:deploy-file',
+                 "-Durl=#{@nexus_url}",
+                 "-Dfile=#{shaded_jar}",
+                 "-Dversion=#{sha}",
+                 '-DupdateReleaseInfo=true',
+                 "-DpomFile=#{mvn_module}/pom.xml",
+                 "-DrepositoryId=#{@nexus_repo_id}",
+                 "-Dclassifier=shaded"
+      ]
+
+      BuildStrategy.execute_with_timeout(command, @timeout, "log/artifact-upload.log")
+    end
+  end
+
+  def upload_log_file(file)
+    log_artifact_upload_url = "http://#{Kochiku::Worker.settings.build_master}/build_attempts/#{@build_attempt_id}/build_artifacts"
 
     begin
-      RestClient::Request.execute(:method => :post, :url => artifact_upload_url, :payload => {:build_artifact => {:log_file => file}}, :headers => {:accept => :xml}, :timeout => 60 * 5)
+      RestClient::Request.execute(:method => :post, :url => log_artifact_upload_url, :payload => {:build_artifact => {:log_file => file}}, :headers => {:accept => :xml}, :timeout => 60 * 5)
     rescue Errno::EHOSTUNREACH
       tries = (tries || 0) + 1
       if tries < 2
@@ -146,7 +175,8 @@ class BuildAttemptJob < JobBase
     def message.path
       'aborted.txt'
     end
-    upload_artifact_file(message)
+
+    upload_log_file(message)
 
     signal_build_is_finished(:aborted)
   end

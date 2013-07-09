@@ -1,31 +1,37 @@
 module BuildStrategy
+  def self.execute_with_timeout(command, timeout, log_file)
+    dir = File.dirname(log_file)
+    File.mkdir_p(dir) unless Dir.exists?(dir)
+    File.open(log_file, "a") do |file|
+      file.write(command + "\n")
+    end
+    pid = nil
+    Bundler.with_clean_env do
+      pid = Process.spawn(command, :out => [log_file, "a"], :err => [:child, :out])
+    end
+
+    Timeout.timeout(timeout) do
+      Process.wait(pid)
+    end
+    $?.exitstatus == 0
+  end
+
   class BuildAllStrategy
     class ErrorFoundInLogError < StandardError; end
 
     LOG_FILE = "log/stdout.log"
 
     def execute_build(build_kind, test_files, test_command, timeout, options)
-      execute_with_timeout(ci_command(build_kind, test_files, test_command, options), timeout)
+      execute_with_timeout_and_kill(ci_command(build_kind, test_files, test_command, options), timeout)
     end
 
-    def artifacts_glob
+    def log_files_glob
       ['log/*log']
     end
 
-    def execute_with_timeout(command, timeout)
-      Dir.mkdir("log") unless Dir.exists?("log")
-      File.open(LOG_FILE, "w") do |file|
-        file.write(command + "\n")
-      end
-      pid = nil
-      Bundler.with_clean_env do
-        pid = Process.spawn(command, :out => [LOG_FILE, "a"], :err => [:child, :out])
-      end
+    def execute_with_timeout_and_kill(command, timeout)
       begin
-        Timeout.timeout(timeout) do
-          Process.wait(pid)
-        end
-        $?.exitstatus == 0
+        BuildStrategy.execute_with_timeout(command, timeout, LOG_FILE)
       ensure
         kill_all_child_processes
         check_log_for_errors!

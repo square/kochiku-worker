@@ -4,7 +4,7 @@ module BuildStrategy
       system %[ruby -e "now = Time.now.usec; File.open('now.log', 'w') {|f|f.write(now)}; exit(now % 3 == 0 ? 1 : 0)"]
     end
 
-    def artifacts_glob
+    def log_files_glob
       ["now.log"]
     end
   end

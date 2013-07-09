@@ -133,7 +133,7 @@ describe BuildAttemptJob do
             end
           end
 
-          subject.collect_artifacts('**/*.wantedlog')
+          subject.collect_logs('**/*.wantedlog')
 
           wanted_logs.each do |artifact|
             log_name = File.basename(artifact)
@@ -148,7 +148,7 @@ describe BuildAttemptJob do
         Dir.chdir(dir) do
           log_name = 'empty.log'
           system("touch #{log_name}")
-          subject.collect_artifacts('*.log')
+          subject.collect_logs('*.log')
           WebMock.should_not have_requested(:post, "#{master_host}/build_attempts/#{build_attempt_id}/build_artifacts").with { |req| req.body.include?(log_name) }
         end
       end

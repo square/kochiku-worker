@@ -4,7 +4,7 @@ module BuildStrategy
       true
     end
 
-    def artifacts_glob
+    def log_files_glob
       []
     end
   end

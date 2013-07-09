@@ -9,6 +9,7 @@ describe BuildStrategy::BuildAllStrategy do
     Process.stub(:spawn).and_return do |*args|
       @spawned_pid = old_spawn.call(*args)
     end
+    File.unlink(BuildStrategy::BuildAllStrategy::LOG_FILE) if File.exists?(BuildStrategy::BuildAllStrategy::LOG_FILE)
   end
 
   describe "#execute_with_timeout" do
@@ -17,7 +18,7 @@ describe BuildStrategy::BuildAllStrategy do
     it "should not block and kill command if it takes too long" do
       start_time = Time.now
       expect {
-        subject.execute_with_timeout("sleep 3 #{dev_null}", 0.1)
+        subject.execute_with_timeout_and_kill("sleep 3 #{dev_null}", 0.1)
       }.to raise_error(Timeout::Error)
       (Time.now - start_time).should be_within(0.3).of(0.1)
       expect {
@@ -29,23 +30,23 @@ describe BuildStrategy::BuildAllStrategy do
     end
 
     it "should not claim to have killed when it didn't" do
-      subject.execute_with_timeout "true", 0.1
+      subject.execute_with_timeout_and_kill "true", 0.1
 
       expected = "******** Process taking too long, Kochiku killing it NOW ************\n"
       log.last.should_not == expected
     end
 
     it "should return true if it succeeds" do
-      subject.execute_with_timeout("pwd #{dev_null}", 0.1).should == true
+      subject.execute_with_timeout_and_kill("pwd #{dev_null}", 0.1).should == true
     end
 
     it "should return false if it fails" do
-      subject.execute_with_timeout("ls /tmp/afilethatdoesnotexist #{dev_null}", 0.1).should == false
+      subject.execute_with_timeout_and_kill("ls /tmp/afilethatdoesnotexist #{dev_null}", 0.1).should == false
     end
 
     it "should raise a ErrorFoundInLogError for known errors in output" do
       expect {
-        subject.execute_with_timeout("echo 'couldn\'t find resque worker'", 0.1)
+        subject.execute_with_timeout_and_kill("echo 'couldn\'t find resque worker'", 0.1)
       }.to raise_error(BuildStrategy::BuildAllStrategy::ErrorFoundInLogError)
     end
   end
