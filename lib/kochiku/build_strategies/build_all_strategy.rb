@@ -3,7 +3,7 @@ module BuildStrategy
     dir = File.dirname(log_file)
     FileUtils.mkdir_p(dir) unless Dir.exists?(dir)
     File.open(log_file, "a") do |file|
-      file.write(command + "\n")
+      file.write(Array(command).join(" ") + "\n")
     end
     pid = nil
     Bundler.with_clean_env do
