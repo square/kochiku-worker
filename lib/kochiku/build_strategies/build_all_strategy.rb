@@ -7,7 +7,7 @@ module BuildStrategy
     end
     pid = nil
     Bundler.with_clean_env do
-      pid = Process.spawn(command, :out => [log_file, "a"], :err => [:child, :out])
+      pid = Process.spawn(*command, :out => [log_file, "a"], :err => [:child, :out])
     end
 
     Timeout.timeout(timeout) do
