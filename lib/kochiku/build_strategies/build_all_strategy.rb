@@ -102,6 +102,8 @@ module BuildStrategy
     end
 
     def check_log_for_errors!
+      return unless File.exists?(LOG_FILE)
+
       File.open(LOG_FILE, :encoding => 'UTF-8') do |file|
         file.each do |line|
           raise ErrorFoundInLogError.new(line) if known_error?(line)

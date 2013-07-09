@@ -20,7 +20,7 @@ set :use_sudo, false
 
 macbuilds = (1..22).map {|n| "macbuild%02d.sfo.squareup.com" % n }
 role :mac_worker, *macbuilds
-role :ec2_worker, *YAML.load(File.read('config/ec2-workers.yml')).each_slice(70).to_a[0]
+#role :ec2_worker, *YAML.load(File.read('config/ec2-workers.yml')).each_slice(70).to_a[0]
 
 after "deploy:setup", "kochiku:setup"
 after "deploy:create_symlink", "kochiku:symlinks"
