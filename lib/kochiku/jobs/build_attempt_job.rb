@@ -11,7 +11,7 @@ class BuildAttemptJob < JobBase
     @test_command = build_options["test_command"]
     @nexus_url = build_options["nexus_url"]
     @nexus_repo_id = build_options["nexus_repo_id"]
-    @upload_artifact = build_options["upload_artifact"]
+    @upload_artifacts = build_options["upload_artifacts"]
     @remote_name = build_options["remote_name"]
     @repo_url = build_options["repo_url"]
     @timeout = build_options["timeout"]
@@ -34,7 +34,7 @@ class BuildAttemptJob < JobBase
     Kochiku::Worker::GitRepo.inside_copy(@repo_name, @remote_name, @repo_url, @build_ref, @branch) do
       begin
         result = run_tests(@build_kind, @test_files, @test_command, @timeout, @options) ? :passed : :failed
-        if result == :passed && @upload_artifact
+        if result == :passed && @upload_artifacts
           @test_files.each { |file| upload_artifact(file) }
         end
         signal_build_is_finished(result)
