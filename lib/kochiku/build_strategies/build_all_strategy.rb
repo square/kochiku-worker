@@ -1,7 +1,7 @@
 module BuildStrategy
   def self.execute_with_timeout(command, timeout, log_file)
     dir = File.dirname(log_file)
-    File.mkdir_p(dir) unless Dir.exists?(dir)
+    FileUtils.mkdir_p(dir) unless Dir.exists?(dir)
     File.open(log_file, "a") do |file|
       file.write(command + "\n")
     end
@@ -102,8 +102,6 @@ module BuildStrategy
     end
 
     def check_log_for_errors!
-      return unless File.exists?(LOG_FILE)
-
       File.open(LOG_FILE, :encoding => 'UTF-8') do |file|
         file.each do |line|
           raise ErrorFoundInLogError.new(line) if known_error?(line)
