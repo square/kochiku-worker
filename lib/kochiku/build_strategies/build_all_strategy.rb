@@ -113,7 +113,8 @@ module BuildStrategy
         "couldn't find resque worker",
         "Resource temporarily unavailable",
         "Can't connect to local MySQL server through socket",
-        "cucumber processes did not come up"
+        "cucumber processes did not come up",
+        "Mysql timed out, bailing"
       ]
     )
     def known_error?(line)
