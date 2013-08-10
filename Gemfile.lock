@@ -9,7 +9,7 @@ GEM
       tzinfo (~> 0.3.37)
     addressable (2.3.5)
     atomic (1.1.12)
-    capistrano (2.15.5)
+    capistrano (2.11.2)
       highline
       net-scp (>= 1.0.0)
       net-sftp (>= 2.0.0)
