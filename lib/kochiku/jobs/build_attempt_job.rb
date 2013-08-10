@@ -9,13 +9,10 @@ class BuildAttemptJob < JobBase
     @test_files = build_options["test_files"]
     @repo_name = build_options["repo_name"]
     @test_command = build_options["test_command"]
-    @nexus_url = build_options["nexus_url"]
-    @nexus_repo_id = build_options["nexus_repo_id"]
-    @upload_artifacts = build_options["upload_artifacts"]
     @remote_name = build_options["remote_name"]
     @repo_url = build_options["repo_url"]
     @timeout = build_options["timeout"]
-    @options = build_options["options"]
+    @options = build_options["options"] || {}
   end
 
   def sha
@@ -33,10 +30,7 @@ class BuildAttemptJob < JobBase
 
     Kochiku::Worker::GitRepo.inside_copy(@repo_name, @remote_name, @repo_url, @build_ref, @branch) do
       begin
-        result = run_tests(@build_kind, @test_files, @test_command, @timeout, @options) ? :passed : :failed
-        if result == :passed && @upload_artifacts
-          @test_files.each { |file| upload_artifact(file) }
-        end
+        result = run_tests(@build_kind, @test_files, @test_command, @timeout, @options.merge({"git_branch" => @branch})) ? :passed : :failed
         signal_build_is_finished(result)
       ensure
         collect_logs(Kochiku::Worker.build_strategy.log_files_glob)
@@ -98,7 +92,7 @@ class BuildAttemptJob < JobBase
 
   def signal_build_is_starting
     benchmark("Signal build attempt #{@build_attempt_id} starting") do
-      build_start_url = "http://#{Kochiku::Worker.settings.build_master}/build_attempts/#{@build_attempt_id}/start"
+      build_start_url = "https://#{Kochiku::Worker.settings.build_master}/build_attempts/#{@build_attempt_id}/start"
 
       begin
         result = RestClient::Request.execute(:method => :post, :url => build_start_url, :payload => {:builder => hostname}, :headers => {:accept => :json})
@@ -112,7 +106,7 @@ class BuildAttemptJob < JobBase
 
   def signal_build_is_finished(result)
     benchmark("Signal build attempt #{@build_attempt_id} finished") do
-      build_finish_url = "http://#{Kochiku::Worker.settings.build_master}/build_attempts/#{@build_attempt_id}/finish"
+      build_finish_url = "https://#{Kochiku::Worker.settings.build_master}/build_attempts/#{@build_attempt_id}/finish"
 
       begin
         RestClient::Request.execute(:method => :post, :url => build_finish_url, :payload => {:state => result}, :headers => {:accept => :json}, :timeout => 60, :open_timeout => 60)
@@ -129,26 +123,8 @@ class BuildAttemptJob < JobBase
     end
   end
 
-  def upload_artifact(mvn_module)
-    return unless @build_kind == 'maven'
-    benchmark("Uploading artifact for #{mvn_module}") do
-      shaded_jar = Dir.glob("#{mvn_module}/target/*-shaded.jar").first
-      command = ['mvn', 'org.apache.maven.plugins:maven-deploy-plugin:2.7:deploy-file',
-                 "-Durl=#{@nexus_url}",
-                 "-Dfile=#{shaded_jar}",
-                 "-Dversion=#{sha}",
-                 '-DupdateReleaseInfo=true',
-                 "-DpomFile=#{mvn_module}/pom.xml",
-                 "-DrepositoryId=#{@nexus_repo_id}",
-                 "-Dclassifier=shaded"
-      ]
-
-      BuildStrategy.execute_with_timeout(command, @timeout, "log/artifact-upload.log")
-    end
-  end
-
   def upload_log_file(file)
-    log_artifact_upload_url = "http://#{Kochiku::Worker.settings.build_master}/build_attempts/#{@build_attempt_id}/build_artifacts"
+    log_artifact_upload_url = "https://#{Kochiku::Worker.settings.build_master}/build_attempts/#{@build_attempt_id}/build_artifacts"
 
     begin
       RestClient::Request.execute(:method => :post, :url => log_artifact_upload_url, :payload => {:build_artifact => {:log_file => file}}, :headers => {:accept => :xml}, :timeout => 60 * 5)

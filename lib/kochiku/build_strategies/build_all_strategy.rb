@@ -84,7 +84,7 @@ module BuildStrategy
     private
 
     def ci_command(build_kind, test_files, test_command, options)
-      ruby_command = if options && options["ruby"]
+      ruby_command = if options["ruby"]
         "rvm --install --create use #{options["ruby"]}"
       else
         "if [ -e .rvmrc ]; then source .rvmrc; elif [ -e .ruby-version ]; then rvm --install --create use $(cat .ruby-version); fi"
@@ -94,7 +94,7 @@ module BuildStrategy
         " PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/X11/bin:/usr/local/share/python:$M2" +
         " DISPLAY=localhost:1.0" +
         " TEST_RUNNER=#{build_kind}" +
-        " MAVEN_OPTS='-Xms1024m -Xmx4096m -XX:PermSize=1024m -XX:MaxPermSize=2048m'" +
+        " GIT_BRANCH=#{options["git_branch"]}" +
         " RUN_LIST=$TARGETS" +
         " bash --noprofile --norc -c 'source ~/.rvm/scripts/rvm ; #{ruby_command} ; ruby -v ; #{test_command}'"
       ).gsub("$TARGETS", test_files.join(','))
