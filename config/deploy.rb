@@ -73,9 +73,9 @@ namespace :kochiku do
 
   task :create_kochiku_worker_yaml, :roles => [:mac_worker, :ec2_worker] do
     config =
-      [ 'build_master: macbuild-master.sfo.squareup.com',
+      [ 'build_master: kochiku.corp.squareup.com',
         'build_strategy: build_all',
-        'redis_host: macbuild-master.sfo.squareup.com' ]
+        'redis_host: kochiku.corp.squareup.com' ]
 
     run "echo '#{config.join("$")}' | tr '$' '\n' > #{current_path}/config/kochiku-worker.yml"
   end
