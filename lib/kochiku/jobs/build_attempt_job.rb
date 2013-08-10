@@ -30,7 +30,7 @@ class BuildAttemptJob < JobBase
 
     Kochiku::Worker::GitRepo.inside_copy(@repo_name, @remote_name, @repo_url, @build_ref, @branch) do
       begin
-        result = run_tests(@build_kind, @test_files, @test_command, @timeout, @options.merge({"git_branch" => @branch})) ? :passed : :failed
+        result = run_tests(@build_kind, @test_files, @test_command, @timeout, @options.merge({"git_commit" => @build_ref, "git_branch" => @branch})) ? :passed : :failed
         signal_build_is_finished(result)
       ensure
         collect_logs(Kochiku::Worker.build_strategy.log_files_glob)

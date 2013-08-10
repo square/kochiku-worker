@@ -94,6 +94,7 @@ module BuildStrategy
         " PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/X11/bin:/usr/local/share/python:$M2" +
         " DISPLAY=localhost:1.0" +
         " TEST_RUNNER=#{build_kind}" +
+        " GIT_COMMIT=#{options["git_commit"]}" +
         " GIT_BRANCH=#{options["git_branch"]}" +
         " RUN_LIST=$TARGETS" +
         " bash --noprofile --norc -c 'source ~/.rvm/scripts/rvm ; #{ruby_command} ; ruby -v ; #{test_command}'"
