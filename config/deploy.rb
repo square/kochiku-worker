@@ -18,7 +18,7 @@ set :deploy_via, :remote_cache
 set :keep_releases, 5
 set :use_sudo, false
 
-macbuilds = (1..22).map {|n| "macbuild%02d.sfo.squareup.com" % n }
+macbuilds = (1..1).map {|n| "macbuild%02d.sfo.squareup.com" % n }
 role :mac_worker, *macbuilds
 #role :ec2_worker, *YAML.load(File.read('config/ec2-workers.yml')).each_slice(70).to_a[0]
 

@@ -117,7 +117,7 @@ describe BuildAttemptJob do
 
   describe "#collect_artifacts" do
     before do
-      Cocaine::CommandLine.unstub!(:new)    # it is desired that the gzip command to go through
+      Cocaine::CommandLine.unstub(:new)    # it is desired that the gzip command to go through
       stub_request(:any, /#{master_host}.*/)
     end
 
