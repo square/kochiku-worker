@@ -19,7 +19,7 @@ module Kochiku
             unless remote_list.include?(remote_name)
               run! "git remote add #{remote_name} #{remote_url}"
             end
-            synchronize_with_remote(remote_name, branch)
+            synchronize_with_remote(remote_name, sha, branch)
             #TODO: doing this here is questionable - this may not work for forks
             Cocaine::CommandLine.new("git submodule update", "--init --quiet").run
           end
@@ -63,9 +63,11 @@ module Kochiku
           Cocaine::CommandLine.new("git clone", "--recursive #{repo_url} #{cached_repo_path}").run
         end
 
-        def synchronize_with_remote(name, branch = nil)
+        def synchronize_with_remote(name, sha, branch = nil)
           refspec = branch.to_s.empty? ? "" : "+#{branch}"
           Cocaine::CommandLine.new("git fetch", "--quiet --prune --no-tags #{name} #{refspec}").run
+          # Check that we got the sha we are expecting
+          Cocaine::CommandLine.new("git rev-list", "--quiet -n1 #{sha}").run
         rescue Cocaine::ExitStatusError
           # likely caused by another 'git fetch' that is currently in progress. Wait a few seconds and try again
           tries = (tries || 0) + 1
