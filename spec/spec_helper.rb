@@ -19,6 +19,7 @@ RSpec.configure do |config|
 
     Cocaine::CommandLine.stub(:new).with('git fetch', anything) { double('git fetch', :run => nil) }
     Cocaine::CommandLine.stub(:new).with('git submodule update', anything) { double('git submodule update', :run => nil) }
+    Cocaine::CommandLine.stub(:new).with('git rev-list', anything) { double('git rev-list', :run => nil) }
 
     Kochiku::Worker.logger.stub(:info)
   end
