@@ -27,3 +27,11 @@ Getting Started
 
     # run a worker
     QUEUE=ci rake resque:work
+
+
+Prerequistes
+--------------
+The worker machines need to have:
+Ruby 2.0
+rvm
+git (we recommend the same version of git that your git server is running)
