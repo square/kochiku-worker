@@ -1,4 +1,4 @@
-check process kochiku-worker with pidfile /home/square/kochiku-worker/shared/pids/kochiku-worker.pid
+check process kochiku-worker with pidfile /home/kochiku/kochiku-worker/shared/pids/kochiku-worker.pid
   start program "/etc/init.d/kochiku-worker start"
   stop program "/etc/init.d/kochiku-worker stop"
   mode active
