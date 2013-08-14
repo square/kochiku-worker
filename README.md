@@ -29,7 +29,7 @@ Getting Started
     QUEUE=ci rake resque:work
 
 
-Prerequistes
+Prerequisites
 --------------
 The worker machines need to have:
 Ruby 2.0
