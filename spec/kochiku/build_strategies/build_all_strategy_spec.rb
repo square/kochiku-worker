@@ -15,7 +15,7 @@ describe BuildStrategy::BuildAllStrategy do
   describe "#execute_with_timeout" do
     let(:log) { IO.readlines(BuildStrategy::BuildAllStrategy::LOG_FILE) }
 
-    it "should not block and kill command if it takes too long" do
+    it "should kill the command if it takes too long" do
       start_time = Time.now
       expect {
         subject.execute_with_timeout_and_kill("sleep 3 #{dev_null}", 0.1)
