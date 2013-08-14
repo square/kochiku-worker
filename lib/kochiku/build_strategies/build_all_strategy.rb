@@ -92,7 +92,7 @@ module BuildStrategy
       (
         "env -i HOME=$HOME" +
         " USER=$USER" +
-        " PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/X11/bin:/usr/local/share/python:$M2" +
+        " PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/X11/bin:$M2" +
         " DISPLAY=localhost:1.0" +
         " TEST_RUNNER=#{build_kind}" +
         " GIT_COMMIT=#{options["git_commit"]}" +
