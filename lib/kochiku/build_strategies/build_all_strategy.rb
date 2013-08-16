@@ -116,7 +116,8 @@ module BuildStrategy
         "Resource temporarily unavailable",
         "Can't connect to local MySQL server through socket",
         "cucumber processes did not come up",
-        "Mysql timed out, bailing"
+        "Mysql timed out, bailing",
+        "Gem::RemoteFetcher::FetchError"
       ]
     )
     def known_error?(line)
