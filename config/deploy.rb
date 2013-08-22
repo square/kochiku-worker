@@ -1,4 +1,4 @@
-require "configuration"
+require "./config/configuration"
 
 require 'bundler/capistrano' # adds bundle:install step to deploy pipeline
 
