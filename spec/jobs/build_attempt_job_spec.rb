@@ -12,16 +12,16 @@ describe BuildAttemptJob do
       "build_ref" => build_ref,
       "build_kind" => build_part_kind,
       "test_files" => test_files,
-      "repo_name" => 'web-cache',
+      "repo_name" => 'local-cache',
       "remote_name" => "origin",
       "test_command" => "script/ci worker",
-      "repo_url" => "git@git.squareup.com:square/web.git"
+      "repo_url" => "git@github.com:square/kochiku-worker.git"
   } }
 
   subject { BuildAttemptJob.new(build_options) }
 
   before do
-    FileUtils.mkdir_p(File.join(File.dirname(__FILE__), "..", "..", "tmp", "build-partition", "web-cache"))
+    FileUtils.mkdir_p(File.join(File.dirname(__FILE__), "..", "..", "tmp", "build-partition", "local-cache"))
   end
 
   describe "#perform" do
@@ -115,13 +115,13 @@ describe BuildAttemptJob do
     end
   end
 
-  describe "#collect_artifacts" do
+  describe "#collect_logs" do
     before do
       Cocaine::CommandLine.unstub(:new)    # it is desired that the gzip command to go through
       stub_request(:any, /#{master_host}.*/)
     end
 
-    it "posts the artifacts back to the master server" do
+    it "posts the local build logs back to the master server" do
       Dir.mktmpdir do |dir|
         Dir.chdir(dir) do
           wanted_logs = ['a.wantedlog', 'b.wantedlog', 'd/c.wantedlog']
