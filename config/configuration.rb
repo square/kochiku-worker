@@ -1,12 +1,26 @@
-# set this to the location of your Kochiku build master
-BUILD_MASTER_HOSTNAME = "kochiku.example.com"
+class SettingsAccessor
+  def initialize(yaml)
+    @hash = YAML.load(yaml).with_indifferent_access
+  end
 
-# Change this if you want to run Redis on a different machine than the build master
-# This needs to be the same as the Redis instance that the Kochiku application uses
-REDIS_HOSTNAME = BUILD_MASTER_HOSTNAME
+  def kochiku_web_host
+    @hash[:kochiku_web_host]
+  end
 
-# Change this to the hostnames for the kochiku worker boxes that you want to deploy to
-WORKER_HOSTNAMES = [
- "worker1.example.com",
- "worker2.example.com"
-]
+  def redis_host
+    @hash[:redis_host]
+  end
+
+  def worker_hosts
+    @hash[:worker_hosts]
+  end
+end
+
+# Load application settings for Kochiku worker
+CONF_FILE = File.expand_path('application.yml', __FILE__)
+
+if !File.exist?(CONF_FILE)
+  raise "#{CONF_FILE} is required to deploy kochiku-worker"
+else
+  Settings = SettingsAccessor.new(File.read(CONF_FILE))
+end
