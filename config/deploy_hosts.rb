@@ -1,4 +1,4 @@
-class SettingsAccessor
+class ConfigAccessor
   def initialize(yaml)
     @hash = YAML.load(yaml)
   end
@@ -21,5 +21,5 @@ CONF_FILE = File.expand_path('deploy_hosts.yml', File.dirname(__FILE__))
 if !File.exist?(CONF_FILE)
   raise "#{CONF_FILE} is required to deploy kochiku-worker"
 else
-  Settings = SettingsAccessor.new(File.read(CONF_FILE))
+  HostSettings = ConfigAccessor.new(File.read(CONF_FILE))
 end
