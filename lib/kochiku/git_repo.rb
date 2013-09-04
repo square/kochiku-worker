@@ -17,7 +17,7 @@ module Kochiku
             # update the cached repo
             remote_list = `git remote -v | grep #{remote_name}`
             unless remote_list.include?(remote_name)
-              run! "git remote add #{remote_name} #{remote_url}"
+              run! "git remote add #{remote_name} #{repo_url}"
             end
             synchronize_with_remote(remote_name, sha, branch)
             #TODO: doing this here is questionable - this may not work for forks
