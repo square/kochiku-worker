@@ -1,4 +1,4 @@
-require "./config/configuration"
+require "./config/deploy_hosts"
 
 require 'bundler/capistrano' # adds bundle:install step to deploy pipeline
 
@@ -15,7 +15,7 @@ set :deploy_via, :remote_cache
 set :keep_releases, 5
 set :use_sudo, false
 
-role :worker, *Settings.worker_hosts
+role :worker, *HostSettings.worker_hosts
 
 after "deploy:setup", "kochiku:setup"
 after "deploy:create_symlink", "kochiku:symlinks"
@@ -42,9 +42,9 @@ namespace :kochiku do
 
   task :create_kochiku_worker_yaml, :roles => :workers  do
     config = <<-CONFIG_STR
-      build_master: #{Settings.kochiku_web_host}
+      build_master: #{HostSettings.kochiku_web_host}
       build_strategy: build_all
-      redis_host: #{Settings.redis_host}
+      redis_host: #{HostSettings.redis_host}
     CONFIG_STR
 
     put(config, "#{current_path}/config/kochiku-worker.yml")
