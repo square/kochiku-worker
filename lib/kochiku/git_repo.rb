@@ -20,6 +20,8 @@ module Kochiku
               run! "git remote add #{remote_name} #{repo_url}"
             end
             synchronize_with_remote(remote_name, sha, branch)
+            # Update the master ref so that scripts may treat master build differently than branch build
+            synchronize_with_remote(remote_name, sha, 'master') unless branch == 'master'
             #TODO: doing this here is questionable - this may not work for forks
             Cocaine::CommandLine.new("git submodule update", "--init --quiet").run
           end
