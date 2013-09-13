@@ -1,37 +1,15 @@
 Kochiku Worker
 ==============
 
-Kochiku is "Build" in Japanese (according to google translate).
+Kochiku-worker is the builder component of [Kochiku](https://github.com/square/kochiku). The worker code is deployed to each computer that runs [`BuildAttemptJob`s](https://github.com/square/kochiku-worker/blob/master/spec/jobs/build_attempt_job_spec.rb), which are enqueued by [`BuildPartitioningJob`s](https://github.com/square/kochiku/blob/master/spec/jobs/build_partitioning_job_spec.rb) from Kochiku.
 
-Kochiku consists of two pieces. There is a master process and a number of slave
-workers. The slave workers check out a copy of your project into a directory
-and run a subset of the tests inside of it. They then report status, any build
-artifacts (logs, etc) and statistical information back to the master server.
+Since Kochiku uses [Resque](https://github.com/resque/resque) jobs, a kochiku-worker is essentially just a Resque worker. All of the techniques that you can use with Resque workers, such as the environment variables and Unix signals, also work with Kochiku workers.
 
+### Running in development
 
-Worker
-------
+See the [Running Kochiku in development](https://github.com/square/kochiku/wiki/Hacking-on-Kochiku#running-kochiku-in-development) section of the Hacking on Kochiku wiki page.
 
-### BuildPartitioningJob
-Fills the queue with build part jobs. Enqueued by the master.
+### Deployment
 
-### BuildPartJob
-Runs the tests for a particular part of the build. Updates status.
+See the [Installation & Deployment](https://github.com/square/kochiku/wiki/Installation-&-Deployment#installing-workers) page of the Kochiku wiki.
 
-### BuildStateUpdateJob
-Promotes a tag if the build is successful. Enqueued by BuildAttemptObserver.
-
-
-Getting Started
----------------
-
-    # run a worker
-    QUEUE=ci rake resque:work
-
-
-Prerequisites
---------------
-The worker machines need to have:
-Ruby 2.0
-rvm
-git (we recommend the same version of git that your git server is running)

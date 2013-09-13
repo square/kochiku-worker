@@ -1,4 +1,4 @@
-require "./config/configuration"
+require "./config/deploy_hosts"
 
 require 'bundler/capistrano' # adds bundle:install step to deploy pipeline
 
@@ -15,7 +15,7 @@ set :deploy_via, :remote_cache
 set :keep_releases, 5
 set :use_sudo, false
 
-role :worker, *Settings.worker_hosts
+role :worker, *HostSettings.worker_hosts
 
 after "deploy:setup", "kochiku:setup"
 after "deploy:create_symlink", "kochiku:symlinks"
@@ -23,7 +23,7 @@ after "deploy:create_symlink", "kochiku:create_kochiku_worker_yaml"
 
 namespace :deploy do
   desc "Restart all of the build workers"
-  task :restart, :roles => :workers do
+  task :restart, :roles => :worker do
     # Assumes your workers are monitored by Monit
     # You may want to redefine this task inside of deploy.custom.rb
     run 'sudo monit restart kochiku-worker'
@@ -31,26 +31,26 @@ namespace :deploy do
 end
 
 namespace :kochiku do
-  task :setup, :roles => :workers  do
+  task :setup, :roles => :worker  do
     run "gem install bundler -v '~> 1.3' --conservative"
     run "mkdir -p #{shared_path}/build-partition"
   end
 
-  task :symlinks, :roles => :workers do
+  task :symlinks, :roles => :worker do
     run "ln -nfFs #{shared_path}/build-partition #{current_path}/tmp/build-partition"
   end
 
-  task :create_kochiku_worker_yaml, :roles => :workers  do
+  task :create_kochiku_worker_yaml, :roles => :worker  do
     config = <<-CONFIG_STR
-      build_master: #{Settings.kochiku_web_host}
+      build_master: #{HostSettings.kochiku_web_host}
       build_strategy: build_all
-      redis_host: #{Settings.redis_host}
+      redis_host: #{HostSettings.redis_host}
     CONFIG_STR
 
     put(config, "#{current_path}/config/kochiku-worker.yml")
   end
 
-  task :cleanup_zombies, :roles => :workers do
+  task :cleanup_zombies, :roles => :worker do
     run "ps -eo 'pid ppid comm' |grep -i resque |grep Paused | awk '$2 == 1 { print $1 }' | xargs kill"
   end
 end
