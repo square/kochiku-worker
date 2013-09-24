@@ -5,8 +5,8 @@ set :rvm_ruby_string, 'ruby-2.0.0-p247'
 set :repository,  "git@git.squareup.com:square/kochiku-worker.git"
 set :user, "square"
 
-role :mac_worker, *Settings.worker_hosts.select {|name| name.include? 'macbuild' }
-role :ec2_worker, *Settings.worker_hosts.select {|name| name.include? 'ec2' }
+role :mac_worker, *HostSettings.worker_hosts.select {|name| name.include? 'macbuild' }
+role :ec2_worker, *HostSettings.worker_hosts.select {|name| name.include? 'ec2' }
 
 namespace :deploy do
   desc "Restart the web application server and all of the build workers"
