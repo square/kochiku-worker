@@ -41,13 +41,12 @@ namespace :kochiku do
   end
 
   task :create_kochiku_worker_yaml, :roles => :worker  do
-    config = <<-CONFIG_STR
-      build_master: #{HostSettings.kochiku_web_host}
-      build_strategy: build_all
-      redis_host: #{HostSettings.redis_host}
-    CONFIG_STR
+    config =
+      [ "build_master: #{HostSettings.kochiku_web_host}",
+        'build_strategy: build_all',
+        "redis_host: #{HostSettings.redis_host}" ]
 
-    put(config, "#{current_path}/config/kochiku-worker.yml")
+    run "echo '#{config.join("$")}' | tr '$' '\n' > #{current_path}/config/kochiku-worker.yml"
   end
 
   task :cleanup_zombies, :roles => :worker do
