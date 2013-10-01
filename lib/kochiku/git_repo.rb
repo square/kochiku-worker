@@ -76,7 +76,7 @@ module Kochiku
           # likely caused by another 'git fetch' that is currently in progress. Wait a few seconds and try again
           tries = (tries || 0) + 1
           if tries < 3
-            Kochiku::Worker.logger.info(e)
+            Kochiku::Worker.logger.warn(e)
             sleep(15 * tries)
             retry
           else
