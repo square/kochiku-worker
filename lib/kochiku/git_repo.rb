@@ -69,20 +69,18 @@ module Kochiku
 
         def synchronize_with_remote(name, sha, branch = nil)
           refspec = branch.to_s.empty? ? "" : "+#{branch}"
-          fetch_command = Cocaine::CommandLine.new("git fetch", "--quiet --prune --no-tags #{name} #{refspec}")
-          output = fetch_command.run
-          Kochiku::Worker.logger.info("Fetch exit_status: #{fetch_command.exit_status} output: #{output}")
+          Cocaine::CommandLine.new("git fetch", "--quiet --prune --no-tags #{name} #{refspec}").run
           # Check that we got the sha we are expecting
-          revlist_command = Cocaine::CommandLine.new("git rev-list", "--quiet -n1 #{sha}")
-          output = revlist_command.run
-          Kochiku::Worker.logger.info("Fetch exit_status: #{revlist_command.exit_status} output: #{output}")
+          Cocaine::CommandLine.new("git rev-list", "--quiet -n1 #{sha}").run
         rescue Cocaine::ExitStatusError => e
-          Kochiku::Worker.logger.warn("Caught exception attempting to git fetch #{name} for branch #{branch}: #{e.inspect} ")
           # likely caused by another 'git fetch' that is currently in progress. Wait a few seconds and try again
           tries = (tries || 0) + 1
-          if tries < 2
-            sleep 15
+          if tries < 3
+            Kochiku::Worker.logger.info(e)
+            sleep(15 * tries)
             retry
+          else
+            raise e
           end
         end
       end
