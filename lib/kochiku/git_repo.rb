@@ -70,12 +70,15 @@ module Kochiku
           Cocaine::CommandLine.new("git fetch", "--quiet --prune --no-tags #{name} #{refspec}").run
           # Check that we got the sha we are expecting
           Cocaine::CommandLine.new("git rev-list", "--quiet -n1 #{sha}").run
-        rescue Cocaine::ExitStatusError
+        rescue Cocaine::ExitStatusError => e
           # likely caused by another 'git fetch' that is currently in progress. Wait a few seconds and try again
           tries = (tries || 0) + 1
-          if tries < 2
-            sleep 15
+          if tries < 3
+            Kochiku::Worker.logger.warn(e)
+            sleep(15 * tries)
             retry
+          else
+            raise e
           end
         end
       end

@@ -52,3 +52,5 @@ end
 
 Resque.redis = Redis.new(:host => Kochiku::Worker.settings.redis_host)
 Resque.redis.namespace = "resque:kochiku"
+
+Cocaine::CommandLine.logger = Kochiku::Worker.logger
