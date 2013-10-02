@@ -13,7 +13,6 @@ class BuildAttemptJob < JobBase
     @repo_url = build_options["repo_url"]
     @timeout = build_options["timeout"]
     @options = build_options["options"] || {}
-    Cocaine::CommandLine.logger = logger
   end
 
   def sha
