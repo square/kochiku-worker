@@ -92,6 +92,7 @@ module BuildStrategy
       (
         "env -i HOME=$HOME" +
         " USER=$USER" +
+        " JAVA_HOME=$JAVA_HOME" +
         " PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin:/usr/X11/bin:$M2" +
         " DISPLAY=localhost:1.0" +
         " TEST_RUNNER=#{build_kind}" +
