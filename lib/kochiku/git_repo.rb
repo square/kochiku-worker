@@ -19,9 +19,9 @@ module Kochiku
             unless remote_list.include?(remote_name)
               run! "git remote add #{remote_name} #{repo_url}"
             end
-            synchronize_with_remote(remote_name, sha, branch)
+            synchronize_with_remote(remote_name, branch)
             # Update the master ref so that scripts may treat master build differently than branch build
-            synchronize_with_remote(remote_name, sha, 'master') unless branch == 'master'
+            synchronize_with_remote(remote_name, 'master') unless branch == 'master'
             #TODO: doing this here is questionable - this may not work for forks
             Cocaine::CommandLine.new("git submodule update", "--init --quiet").run
           end
@@ -65,7 +65,7 @@ module Kochiku
           Cocaine::CommandLine.new("git clone", "--recursive #{repo_url} #{cached_repo_path}").run
         end
 
-        def synchronize_with_remote(name, sha, branch = nil)
+        def synchronize_with_remote(name, branch = nil)
           refspec = branch.to_s.empty? ? "" : "+#{branch}"
           Cocaine::CommandLine.new("git fetch", "--quiet --prune --no-tags #{name} #{refspec}").run
         rescue Cocaine::ExitStatusError => e

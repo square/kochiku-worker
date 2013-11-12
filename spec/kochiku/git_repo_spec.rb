@@ -9,7 +9,7 @@ describe Kochiku::Worker::GitRepo do
       Cocaine::CommandLine.stub(:new).with('git fetch', anything) { fetch_double }
       Kochiku::Worker::GitRepo.should_receive(:sleep).exactly(2).times
 
-      expect { Kochiku::Worker::GitRepo.send(:synchronize_with_remote, "master", "SHA") }.to raise_error(Cocaine::ExitStatusError)
+      expect { Kochiku::Worker::GitRepo.send(:synchronize_with_remote, "master") }.to raise_error(Cocaine::ExitStatusError)
     end
   end
 end
