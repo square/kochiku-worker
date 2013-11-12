@@ -31,8 +31,6 @@ module Kochiku
             run! "git clone #{cached_repo_path} #{dir}"
 
             Dir.chdir(dir) do
-              # Add this temporarily to see if we get a different failure
-              Cocaine::CommandLine.new("git rev-list", "--quiet -n1 #{sha}").run
               raise RefNotFoundError.new("Build Ref #{sha} not found in #{repo_url}") unless system("git rev-list --quiet -n1 #{sha}")
               run! "git checkout --quiet #{sha}"
 
@@ -70,8 +68,6 @@ module Kochiku
         def synchronize_with_remote(name, sha, branch = nil)
           refspec = branch.to_s.empty? ? "" : "+#{branch}"
           Cocaine::CommandLine.new("git fetch", "--quiet --prune --no-tags #{name} #{refspec}").run
-          # Check that we got the sha we are expecting
-          Cocaine::CommandLine.new("git rev-list", "--quiet -n1 #{sha}").run
         rescue Cocaine::ExitStatusError => e
           # likely caused by another 'git fetch' that is currently in progress. Wait a few seconds and try again
           tries = (tries || 0) + 1
