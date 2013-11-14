@@ -20,14 +20,28 @@ module Kochiku
               run! "git checkout --quiet #{sha}"
 
               run! "git submodule --quiet init"
-              # redirect the submodules to the cached_repo
-              submodules = `git config --get-regexp "^submodule\\..*\\.url$"`
-              submodules.each_line do |config_line|
-                submodule_path = config_line.match(/submodule\.(.*?)\.url/)[1]
-                `git config --replace-all submodule.#{submodule_path}.url "#{cached_repo_path}/#{submodule_path}"`
-              end
 
-              run! "git submodule --quiet update"
+              submodules = `git config --get-regexp "^submodule\\..*\\.url$"`
+
+              unless submodules.empty?
+                cached_submodules = nil
+                inside_repo(cached_repo_path) do
+                  cached_submodules = `git config --get-regexp "^submodule\\..*\\.url$"`
+                end
+
+                # Redirect the submodules to the cached_repo
+                # If the submodule was added after the initial clone of the cache
+                # repo then it will not be present in the cached_repo and we fall
+                # back to cloning it for each build.
+                submodules.each_line do |config_line|
+                  if cached_submodules.include?(config_line)
+                    submodule_path = config_line.match(/submodule\.(.*?)\.url/)[1]
+                    `git config --replace-all submodule.#{submodule_path}.url "#{cached_repo_path}/#{submodule_path}"`
+                  end
+                end
+
+                run! "git submodule --quiet update"
+              end
 
               yield
             end
@@ -39,6 +53,12 @@ module Kochiku
         end
 
         private
+
+        def inside_repo(cached_repo_path)
+          Dir.chdir(cached_repo_path) do
+            yield
+          end
+        end
 
         def synchronize_cache_repo(cached_repo_path, remote_name, repo_url, sha, branch)
           if !File.directory?(cached_repo_path)
@@ -52,8 +72,8 @@ module Kochiku
 
             synchronize_with_remote(remote_name, sha, branch)
 
-	    # Update the master ref so that scripts may treat master build
-	    # differently than branch build
+            # Update the master ref so that scripts may treat master build
+            # differently than branch build
             synchronize_with_remote(remote_name, sha, 'master') unless branch == 'master'
 
             Cocaine::CommandLine.new("git submodule update", "--init --quiet").run
