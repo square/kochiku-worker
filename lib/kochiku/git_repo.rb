@@ -9,22 +9,7 @@ module Kochiku
       class << self
         def inside_copy(cached_repo_name, remote_name, repo_url, sha, branch)
           cached_repo_path = File.join(WORKING_DIR, cached_repo_name)
-
-          if !File.directory?(cached_repo_path)
-            clone_repo(repo_url, cached_repo_path)
-          end
-          Dir.chdir(cached_repo_path) do
-            # update the cached repo
-            remote_list = `git remote -v | grep #{remote_name}`
-            unless remote_list.include?(remote_name)
-              run! "git remote add #{remote_name} #{repo_url}"
-            end
-            synchronize_with_remote(remote_name, sha, branch)
-            # Update the master ref so that scripts may treat master build differently than branch build
-            synchronize_with_remote(remote_name, sha, 'master') unless branch == 'master'
-            #TODO: doing this here is questionable - this may not work for forks
-            Cocaine::CommandLine.new("git submodule update", "--init --quiet").run
-          end
+          synchronize_cache_repo(cached_repo_path, remote_name, repo_url, sha, branch)
 
           Dir.mktmpdir(nil, WORKING_DIR) do |dir|
             # clone local repo (fast!)
@@ -54,6 +39,26 @@ module Kochiku
         end
 
         private
+
+        def synchronize_cache_repo(cached_repo_path, remote_name, repo_url, sha, branch)
+          if !File.directory?(cached_repo_path)
+            clone_repo(repo_url, cached_repo_path)
+          end
+          Dir.chdir(cached_repo_path) do
+            remote_list = `git remote -v | grep #{remote_name}`
+            unless remote_list.include?(remote_name)
+              run! "git remote add #{remote_name} #{repo_url}"
+            end
+
+            synchronize_with_remote(remote_name, sha, branch)
+
+	    # Update the master ref so that scripts may treat master build
+	    # differently than branch build
+            synchronize_with_remote(remote_name, sha, 'master') unless branch == 'master'
+
+            Cocaine::CommandLine.new("git submodule update", "--init --quiet").run
+          end
+        end
 
         def run!(cmd)
           unless system(cmd)
