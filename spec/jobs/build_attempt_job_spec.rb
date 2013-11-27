@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'fileutils'
+require 'json'
 
 describe BuildAttemptJob do
   let(:master_host) { "https://" + Kochiku::Worker.settings.build_master }
