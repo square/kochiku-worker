@@ -4,6 +4,8 @@ module Kochiku
   module Worker
     class GitRepo
       class RefNotFoundError < StandardError; end
+      class RemoteDoesNotMatch < StandardError; end
+
       WORKING_DIR = File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'tmp', 'build-partition'))
 
       class << self
@@ -66,19 +68,28 @@ module Kochiku
             clone_repo(repo_url, cached_repo_path)
           end
           Dir.chdir(cached_repo_path) do
+            remote_url = Cocaine::CommandLine.new("git config --get remote.origin.url").run.chomp
+            if remote_url != repo_url
+              puts "#{remote_url.inspect} does not match #{repo_url.inspect}."
+              raise RemoteDoesNotMatch
+            end
+
             remote_list = `git remote -v | grep #{remote_name}`
             unless remote_list.include?(remote_name)
               run! "git remote add #{remote_name} #{repo_url}"
             end
 
-            synchronize_with_remote(remote_name, sha, branch)
+            synchronize_with_remote(remote_name, branch)
 
             # Update the master ref so that scripts may treat master build
             # differently than branch build
-            synchronize_with_remote(remote_name, sha, 'master') unless branch == 'master'
+            synchronize_with_remote(remote_name, 'master') unless branch == 'master'
 
             Cocaine::CommandLine.new("git submodule update", "--init --quiet").run
           end
+        rescue RemoteDoesNotMatch
+          FileUtils.rm_rf(cached_repo_path)
+          retry
         end
 
         def run!(cmd)
