@@ -4,7 +4,6 @@ module Kochiku
   module Worker
     class GitRepo
       class RefNotFoundError < StandardError; end
-      class RemoteDoesNotMatch < StandardError; end
 
       WORKING_DIR = File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'tmp', 'build-partition'))
 
@@ -65,14 +64,12 @@ module Kochiku
         def synchronize_cache_repo(cached_repo_path, remote_name, repo_url, sha, branch)
           if !File.directory?(cached_repo_path)
             clone_repo(repo_url, cached_repo_path)
+          elsif !valid_remote_url?(repo_url, cached_repo_path)
+            FileUtils.rm_rf(cached_repo_path)
+            clone_repo(repo_url, cached_repo_path)
           end
-          Dir.chdir(cached_repo_path) do
-            remote_url = Cocaine::CommandLine.new("git config --get remote.origin.url").run.chomp
-            if remote_url != repo_url
-              puts "#{remote_url.inspect} does not match #{repo_url.inspect}."
-              raise RemoteDoesNotMatch
-            end
 
+          Dir.chdir(cached_repo_path) do
             remote_list = `git remote -v | grep #{remote_name}`
             unless remote_list.include?(remote_name)
               run! "git remote add #{remote_name} #{repo_url}"
@@ -86,9 +83,17 @@ module Kochiku
 
             Cocaine::CommandLine.new("git submodule update", "--init --quiet").run
           end
-        rescue RemoteDoesNotMatch
-          FileUtils.rm_rf(cached_repo_path)
-          retry
+        end
+
+        def valid_remote_url?(repo_url, cached_repo_path)
+          Dir.chdir(cached_repo_path) do
+            remote_url = Cocaine::CommandLine.new("git config --get remote.origin.url").run.chomp
+            if remote_url != repo_url
+              puts "#{remote_url.inspect} does not match #{repo_url.inspect}."
+              return false
+            end
+          end
+          true
         end
 
         def run!(cmd)
