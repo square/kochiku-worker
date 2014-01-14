@@ -40,7 +40,12 @@ module BuildStrategy
 
     def kill_all_child_processes
       did_kill = false
-      (child_processes | processes_in_same_group).each do |process_to_kill|
+      # killing processes_in_same_group breaks when kochiku-worker is being run by runit
+      # because it tries to kill runit and all processes in runit that are being run as
+      # the square user
+      # remove processes_in_same_group for now
+      #(child_processes | processes_in_same_group).each do |process_to_kill|
+      child_processes.each do |process_to_kill|
         kill_process(process_to_kill)
         did_kill ||= true
       end
