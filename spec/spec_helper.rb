@@ -14,6 +14,10 @@ Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].each {|f| load f}
 RSpec.configure do |config|
   config.mock_with :rspec
 
+  config.expect_with :rspec do |c|
+    c.syntax = :expect
+  end
+
   config.before :each do
     WebMock.disable_net_connect!
 
