@@ -27,31 +27,31 @@ describe BuildAttemptJob do
 
   describe "#perform" do
     before do
-      Kochiku::Worker::GitRepo.stub(:system).and_return(true)
+      allow(Kochiku::Worker::GitRepo).to receive(:system).and_return(true)
     end
 
     context "build_attempt has been aborted" do
       it "should return without running the tests" do
         stub_request(:post, "#{master_host}/build_attempts/#{build_attempt_id}/start").to_return(:body => {'build_attempt' => {'state' => 'aborted'}}.to_json)
 
-        subject.should_not_receive(:run_tests)
+        expect(subject).not_to receive(:run_tests)
         subject.perform
       end
     end
 
     it "sets the builder on its build attempt" do
       hostname = "i-am-a-compooter"
-      subject.stub(:run_tests)
-      subject.stub(:hostname => hostname)
+      allow(subject).to receive(:run_tests)
+      allow(subject).to receive(:hostname).and_return(hostname)
       stub_request(:post, "#{master_host}/build_attempts/#{build_attempt_id}/start").to_return(:body => {'build_attempt' => {'state' => 'running'}}.to_json)
       stub_request(:post, "#{master_host}/build_attempts/#{build_attempt_id}/finish")
 
       subject.perform
-      WebMock.should have_requested(:post, "#{master_host}/build_attempts/#{build_attempt_id}/start").with(:body => {"builder"=> hostname})
+      expect(WebMock).to have_requested(:post, "#{master_host}/build_attempts/#{build_attempt_id}/start").with(:body => {"builder"=> hostname})
     end
 
     context "build is successful" do
-      before { subject.stub(:run_tests => true) }
+      before { allow(subject).to receive(:run_tests).and_return(true) }
 
       it "creates a build result with a passed result" do
         stub_request(:post, "#{master_host}/build_attempts/#{build_attempt_id}/start").to_return(:body => {'build_attempt' => {'state' => 'running'}}.to_json)
@@ -59,12 +59,12 @@ describe BuildAttemptJob do
 
         subject.perform
 
-        WebMock.should have_requested(:post, "#{master_host}/build_attempts/#{build_attempt_id}/finish").with(:body => {"state"=> "passed"})
+        expect(WebMock).to have_requested(:post, "#{master_host}/build_attempts/#{build_attempt_id}/finish").with(:body => {"state"=> "passed"})
       end
     end
 
     context "build is unsuccessful" do
-      before { subject.stub(:run_tests => false) }
+      before { allow(subject).to receive(:run_tests).and_return(false) }
 
       it "creates a build result with a failed result" do
         stub_request(:post, "#{master_host}/build_attempts/#{build_attempt_id}/start").to_return(:body => {'build_attempt' => {'state' => 'running'}}.to_json)
@@ -72,7 +72,7 @@ describe BuildAttemptJob do
 
         subject.perform
 
-        WebMock.should have_requested(:post, "#{master_host}/build_attempts/#{build_attempt_id}/finish").with(:body => {"state"=> "failed"})
+        expect(WebMock).to have_requested(:post, "#{master_host}/build_attempts/#{build_attempt_id}/finish").with(:body => {"state"=> "failed"})
       end
     end
 
@@ -84,17 +84,17 @@ describe BuildAttemptJob do
         stub_request(:post, "#{master_host}/build_attempts/#{build_attempt_id}/build_artifacts")
         stub_request(:post, "#{master_host}/build_attempts/#{build_attempt_id}/finish").to_return(:head => :ok)
 
-        subject.should_receive(:run_tests).and_raise(FakeTestError.new('something went wrong'))
-        BuildAttemptJob.should_receive(:new).and_return(subject)
-        Kochiku::Worker.logger.stub(:error)
+        expect(subject).to receive(:run_tests).and_raise(FakeTestError.new('something went wrong'))
+        expect(BuildAttemptJob).to receive(:new).and_return(subject)
+        allow(Kochiku::Worker.logger).to receive(:error)
 
         expect { BuildAttemptJob.perform(build_options) }.to raise_error(FakeTestError)
 
-        WebMock.should have_requested(:post, "#{master_host}/build_attempts/#{build_attempt_id}/build_artifacts").with(
+        expect(WebMock).to have_requested(:post, "#{master_host}/build_attempts/#{build_attempt_id}/build_artifacts").with(
           :headers => {'Content-Type' => /multipart\/form-data/},
           :body => /something went wrong/
         )
-        WebMock.should have_requested(:post, "#{master_host}/build_attempts/#{build_attempt_id}/finish").with(:body => {"state" => "errored"})
+        expect(WebMock).to have_requested(:post, "#{master_host}/build_attempts/#{build_attempt_id}/finish").with(:body => {"state" => "errored"})
       end
 
       context "and its GitRepo::RefNotFoundError" do
@@ -103,14 +103,14 @@ describe BuildAttemptJob do
           stub_request(:post, "#{master_host}/build_attempts/#{build_attempt_id}/build_artifacts")
           stub_request(:post, "#{master_host}/build_attempts/#{build_attempt_id}/finish").to_return(:head => :ok)
 
-          subject.should_receive(:run_tests).and_raise(Kochiku::Worker::GitRepo::RefNotFoundError.new)
-          BuildAttemptJob.should_receive(:new).and_return(subject)
-          Kochiku::Worker.logger.stub(:warn)
+          expect(subject).to receive(:run_tests).and_raise(Kochiku::Worker::GitRepo::RefNotFoundError.new)
+          expect(BuildAttemptJob).to receive(:new).and_return(subject)
+          allow(Kochiku::Worker.logger).to receive(:warn)
 
           expect { BuildAttemptJob.perform(build_options) }.to_not raise_error
 
-          WebMock.should have_requested(:post, "#{master_host}/build_attempts/#{build_attempt_id}/build_artifacts")
-          WebMock.should have_requested(:post, "#{master_host}/build_attempts/#{build_attempt_id}/finish").with(:body => {"state" => "aborted"})
+          expect(WebMock).to have_requested(:post, "#{master_host}/build_attempts/#{build_attempt_id}/build_artifacts")
+          expect(WebMock).to have_requested(:post, "#{master_host}/build_attempts/#{build_attempt_id}/finish").with(:body => {"state" => "aborted"})
         end
       end
     end
@@ -138,7 +138,7 @@ describe BuildAttemptJob do
 
           wanted_logs.each do |artifact|
             log_name = File.basename(artifact)
-            WebMock.should have_requested(:post, "#{master_host}/build_attempts/#{build_attempt_id}/build_artifacts").with { |req| req.body.include?(log_name) }
+            expect(WebMock).to have_requested(:post, "#{master_host}/build_attempts/#{build_attempt_id}/build_artifacts").with { |req| req.body.include?(log_name) }
           end
         end
       end
@@ -150,7 +150,7 @@ describe BuildAttemptJob do
           log_name = 'empty.log'
           system("touch #{log_name}")
           subject.collect_logs('*.log')
-          WebMock.should_not have_requested(:post, "#{master_host}/build_attempts/#{build_attempt_id}/build_artifacts").with { |req| req.body.include?(log_name) }
+          expect(WebMock).not_to have_requested(:post, "#{master_host}/build_attempts/#{build_attempt_id}/build_artifacts").with { |req| req.body.include?(log_name) }
         end
       end
     end

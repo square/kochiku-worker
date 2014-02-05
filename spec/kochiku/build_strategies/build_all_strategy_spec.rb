@@ -6,7 +6,7 @@ describe BuildStrategy::BuildAllStrategy do
 
   before do
     old_spawn = Process.method(:spawn)
-    Process.stub(:spawn).and_return do |*args|
+    allow(Process).to receive(:spawn).and_return do |*args|
       @spawned_pid = old_spawn.call(*args)
     end
     File.unlink(BuildStrategy::BuildAllStrategy::LOG_FILE) if File.exists?(BuildStrategy::BuildAllStrategy::LOG_FILE)
@@ -20,28 +20,28 @@ describe BuildStrategy::BuildAllStrategy do
       expect {
         subject.execute_with_timeout_and_kill("sleep 3 #{dev_null}", 0.1)
       }.to raise_error(Timeout::Error)
-      (Time.now - start_time).should be_within(0.3).of(0.1)
+      expect(Time.now - start_time).to be_within(0.3).of(0.1)
       expect {
         Process.kill(0, @spawned_pid)
       }.to raise_error(Errno::ESRCH)
 
       expected = "******** Process taking too long, Kochiku killing it NOW ************\n"
-      log.last.should == expected
+      expect(log.last).to eq(expected)
     end
 
     it "should not claim to have killed when it didn't" do
       subject.execute_with_timeout_and_kill "true", 0.1
 
       expected = "******** Process taking too long, Kochiku killing it NOW ************\n"
-      log.last.should_not == expected
+      expect(log.last).not_to eq(expected)
     end
 
     it "should return true if it succeeds" do
-      subject.execute_with_timeout_and_kill("pwd #{dev_null}", 0.1).should == true
+      expect(subject.execute_with_timeout_and_kill("pwd #{dev_null}", 0.1)).to eq(true)
     end
 
     it "should return false if it fails" do
-      subject.execute_with_timeout_and_kill("ls /tmp/afilethatdoesnotexist #{dev_null}", 0.1).should == false
+      expect(subject.execute_with_timeout_and_kill("ls /tmp/afilethatdoesnotexist #{dev_null}", 0.1)).to eq(false)
     end
 
     it "should raise a ErrorFoundInLogError for known errors in output" do
@@ -55,9 +55,9 @@ describe BuildStrategy::BuildAllStrategy do
     it "only includes processes still running that are not this process or its parent" do
       Process.spawn("sleep 3")
       child_processes = subject.child_processes
-      child_processes.should include(@spawned_pid)
-      child_processes.should_not include(Process.pid)
-      child_processes.should_not include(Process.getpgrp)
+      expect(child_processes).to include(@spawned_pid)
+      expect(child_processes).not_to include(Process.pid)
+      expect(child_processes).not_to include(Process.getpgrp)
     end
   end
 end

@@ -19,13 +19,13 @@ RSpec.configure do |config|
 
     # TODO: This is terrible. Need to either set up proper git fixtures, or
     # figure out the right seams such that a fake object can be supplied.
-    Cocaine::CommandLine.stub(:new).
+    allow(Cocaine::CommandLine).to receive(:new).
       with("git config --get remote.origin.url").
       and_return(double(:run => 'git@github.com:square/kochiku-worker.git'))
-    Cocaine::CommandLine.stub(:new).with('git fetch', anything) { double('git fetch', :run => nil, :exit_status => 0) }
-    Cocaine::CommandLine.stub(:new).with('git submodule update', anything) { double('git submodule update', :run => nil) }
-    Cocaine::CommandLine.stub(:new).with('git rev-list', anything) { double('git rev-list', :run => nil) }
+    allow(Cocaine::CommandLine).to receive(:new).with('git fetch', anything) { double('git fetch', :run => nil, :exit_status => 0) }
+    allow(Cocaine::CommandLine).to receive(:new).with('git submodule update', anything) { double('git submodule update', :run => nil) }
+    allow(Cocaine::CommandLine).to receive(:new).with('git rev-list', anything) { double('git rev-list', :run => nil) }
 
-    Kochiku::Worker.logger.stub(:info)
+    allow(Kochiku::Worker.logger).to receive(:info)
   end
 end
