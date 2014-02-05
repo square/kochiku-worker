@@ -6,9 +6,9 @@ describe BuildStrategy::BuildAllStrategy do
 
   before do
     old_spawn = Process.method(:spawn)
-    allow(Process).to receive(:spawn).and_return do |*args|
+    allow(Process).to receive(:spawn).and_return { |*args|
       @spawned_pid = old_spawn.call(*args)
-    end
+    }
     File.unlink(BuildStrategy::BuildAllStrategy::LOG_FILE) if File.exists?(BuildStrategy::BuildAllStrategy::LOG_FILE)
   end
 
