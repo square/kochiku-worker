@@ -30,11 +30,9 @@ namespace :deploy do
     # the trailing semicolons are required because this is passed to the shell as a single string
     run <<-CMD
     resque1_pid=$(cat #{shared_path}/pids/resque1.pid);
-    resque2_pid=$(cat #{shared_path}/pids/resque2.pid);
     kill -QUIT $resque1_pid;
-    kill -QUIT $resque2_pid;
 
-    while ps x | egrep -q "^($resque1_pid|$resque2_pid)"; do
+    while ps x | egrep -q "^($resque1_pid)"; do
       echo "Waiting for Resque workers to stop on $HOSTNAME...";
       sleep 5;
     done;
