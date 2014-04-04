@@ -1,6 +1,6 @@
 require "rvm/capistrano"
 set :rvm_type, :user
-set :rvm_ruby_string, 'ruby-2.0.0-p353'
+set :rvm_ruby_string, 'ruby-2.1.1'
 
 set :repository,  "git@git.squareup.com:square/kochiku-worker.git"
 set :user, "square"
