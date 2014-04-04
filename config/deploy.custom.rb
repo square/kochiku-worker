@@ -2,7 +2,7 @@ require "rvm/capistrano"
 set :rvm_type, :user
 set :rvm_ruby_string, 'ruby-2.1.1'
 
-set :repository,  "git@git.squareup.com:square/kochiku-worker.git"
+set :repository,  "ssh://git@git.corp.squareup.com/sq/kochiku-worker.git"
 set :user, "square"
 
 role :mac_worker, *HostSettings.worker_hosts.select {|name| name.include? 'macbuild' }
