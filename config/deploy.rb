@@ -1,60 +1,34 @@
-require "./config/deploy_hosts"
+# config valid only for Capistrano 3.1
+lock '3.1.0'
 
-require 'bundler/capistrano' # adds bundle:install step to deploy pipeline
-
-default_run_options[:env] = {'PATH' => '/usr/local/bin:$PATH'}
-
-set :application, "Kochiku Worker"
-set :repository,  "https://github.com/square/kochiku-worker.git"
-set :branch, "master"
-set :scm, :git
-
+set :application, "kochiku-worker"
+set :repo_url,  "https://github.com/square/kochiku-worker.git"
 set :user, "kochiku"
-set :deploy_to, "~/kochiku-worker"
-set :deploy_via, :remote_cache
-set :keep_releases, 5
-set :use_sudo, false
 
-role :worker, *HostSettings.worker_hosts
+ask :branch, proc { `git rev-parse --abbrev-ref HEAD`.chomp }
 
-after "deploy:setup", "kochiku:setup"
-after "deploy:create_symlink", "kochiku:symlinks"
-after "deploy:create_symlink", "kochiku:create_kochiku_worker_yaml"
+# Default value for :format is :pretty
+# set :format, :pretty
 
-namespace :deploy do
-  desc "Restart all of the build workers"
-  task :restart, :roles => :worker do
-    # Assumes your workers are monitored by Monit
-    # You may want to redefine this task inside of deploy.custom.rb
-    run 'sudo monit restart kochiku-worker'
-  end
-end
+# Default value for :log_level is :debug
+# set :log_level, :debug
 
-namespace :kochiku do
-  task :setup, :roles => :worker  do
-    run "gem install bundler -v '~> 1.3' --conservative"
-    run "mkdir -p #{shared_path}/build-partition"
-  end
+# Default value for :pty is false
+# set :pty, true
 
-  task :symlinks, :roles => :worker do
-    run "ln -nfFs #{shared_path}/build-partition #{current_path}/tmp/build-partition"
-  end
+set :linked_dirs, %w{log}
 
-  task :create_kochiku_worker_yaml, :roles => :worker  do
-    config =
-      [ "build_master: #{HostSettings.kochiku_web_host}",
-        'build_strategy: build_all',
-        "redis_host: #{HostSettings.redis_host}" ]
+# Default value for default_env is {}
+# set :default_env, { path: "/opt/ruby/bin:$PATH" }
 
-    run "echo '#{config.join("$")}' | tr '$' '\n' > #{current_path}/config/kochiku-worker.yml"
-  end
+# Reference Capistrano's flow diagram for help choosing hooks
+# http://capistranorb.com/documentation/getting-started/flow/
+before "deploy:started", "kochiku:setup"
+after  "deploy:symlink:shared", "kochiku:symlinks"
+before "deploy:updated", "kochiku:create_kochiku_worker_yaml"
 
-  task :cleanup_zombies, :roles => :worker do
-    run "ps -eo 'pid ppid comm' |grep -i resque |grep Paused | awk '$2 == 1 { print $1 }' | xargs kill"
-  end
-end
-
-# load installation specific capistrano config
-if File.exist?(custom_deploy_config = File.expand_path('deploy.custom.rb', File.dirname(__FILE__)))
-  load custom_deploy_config
+# warn if a legacy deploy deploy.custom.rb is in place
+if File.exist?(File.expand_path('deploy.custom.rb', File.dirname(__FILE__)))
+  warn "Kochiku-worker has upgraded to Capistrano 3. Placing custom capistrano config in deploy.custom.rb is no longer supported. Please move Capistrano settings to config/deploy/production.rb and remove deploy.custom.rb to make this message go away."
+  exit(1)
 end
