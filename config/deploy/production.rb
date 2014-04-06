@@ -4,6 +4,9 @@ require "./config/deploy_hosts"
 # hosts have the primary property set.
 role :worker, HostSettings.worker_hosts
 
-# Set deploy_to to the path where you would like kochiku-worker to be deployed
-# to on the server.
-set :deploy_to, '/var/apps/kochiku-worker'
+role :mac_worker, HostSettings.worker_hosts.select {|name| name.include? 'macbuild' }
+role :ec2_worker, HostSettings.worker_hosts.select {|name| name.include? 'ec2' }
+
+set :deploy_to, '/data/app/kochiku-worker'
+set :repo_url, "ssh://git@git.corp.squareup.com/sq/kochiku-worker.git"
+set :user, "square"
