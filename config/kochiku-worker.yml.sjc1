@@ -1,0 +1,3 @@
+build_master: kochiku.corp.squareup.com
+build_strategy: build_all
+redis_host: kochiku.corp.squareup.com

@@ -1,0 +1,15 @@
+#!/bin/sh
+
+set -e
+set -x
+
+WORKER_DIR=/data/app/kochiku-worker/current
+queues=ci,developer
+
+cd $WORKER_DIR
+
+cp ./config/kochiku_worker.yml ./config/kochiku_worker.yml.development
+mv ./config/kochiku_worker.yml.sjc1 ./config/kochiku_worker.yml
+
+exec setsid /usr/ruby20/bin/bundle exec rake resque:work --trace HOSTNAME=$HOSTNAME \
+   QUEUES=${queues:-"*"} VVERBOSE=1 </dev/null

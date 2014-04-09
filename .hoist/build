@@ -1,0 +1,24 @@
+set -ex
+sha=$(git rev-parse --verify HEAD)
+appdir=/data/app/kochiku-worker/current
+
+# make sure we have ruby20
+yum -y install ruby20 rubygem20-bundler
+
+export PATH=/usr/ruby20/bin:$PATH
+export HTTP_PROXY=http://webproxy.vip:3128
+export HTTPS_PROXY=https://webproxy.vip:3128
+export http_proxy=http://webproxy.vip:3128
+export https_proxy=https://webproxy.vip:3128
+
+rm -rf /data
+mkdir -p  $appdir
+rsync -av --exclude=.git  ./ $appdir/
+
+cd  $appdir
+gem  install bundler
+bundle install --deployment --without development test
+
+
+mkdir /artifacts/kochiku-worker
+tar czvf /artifacts/kochiku-worker/kochiku-worker_$sha.tar.gz ./
