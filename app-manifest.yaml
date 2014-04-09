@@ -1,0 +1,7 @@
+contact: px-robots
+rollout_strategy: basic_stateless
+git:
+  repo: https://stash.corp.squareup.com/scm/sq/kochiku-worker.git
+  author:
+      name: hoist
+      email: hoist@sjc1
