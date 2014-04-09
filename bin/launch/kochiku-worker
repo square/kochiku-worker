@@ -4,7 +4,7 @@ set -e
 set -x
 
 WORKER_DIR=/data/app/kochiku-worker/current
-queues=developer-sjc1
+queues=developer-sjc1,ci-sjc1
 
 cd $WORKER_DIR
 
