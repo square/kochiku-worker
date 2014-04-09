@@ -16,9 +16,7 @@ mkdir -p  $appdir
 rsync -av --exclude=.git  ./ $appdir/
 
 cd  $appdir
-gem  install bundler
 bundle install --deployment --without development test
-
 
 mkdir /artifacts/kochiku-worker
 tar czvf /artifacts/kochiku-worker/kochiku-worker_$sha.tar.gz ./

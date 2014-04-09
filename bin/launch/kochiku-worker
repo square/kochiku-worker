@@ -4,12 +4,17 @@ set -e
 set -x
 
 WORKER_DIR=/data/app/kochiku-worker/current
-queues=ci,developer
+queues=developer-sjc1,ci-sjc1
+
+# XXX: todo, stop using system ruby
+export PATH=/usr/ruby20/bin:$PATH
 
 cd $WORKER_DIR
 
-cp ./config/kochiku_worker.yml ./config/kochiku_worker.yml.development
-mv ./config/kochiku_worker.yml.sjc1 ./config/kochiku_worker.yml
+if [[ -f ./config/kochiku-worker.yml.sjc1 ]];then
+  cp ./config/kochiku-worker.yml ./config/kochiku-worker.yml.development
+  mv ./config/kochiku-worker.yml.sjc1 ./config/kochiku-worker.yml
+fi
 
-exec setsid /usr/ruby20/bin/bundle exec rake resque:work --trace HOSTNAME=$HOSTNAME \
-   QUEUES=${queues:-"*"} VVERBOSE=1 </dev/null
+exec setsid /usr/ruby20/bin/bundle exec rake resque:work \
+  --trace HOSTNAME=$HOSTNAME QUEUES=${queues:-"*"} VVERBOSE=1 </dev/null
