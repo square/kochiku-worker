@@ -6,6 +6,9 @@ set -x
 WORKER_DIR=/data/app/kochiku-worker/current
 queues=developer-sjc1,ci-sjc1
 
+# XXX: todo, stop using system ruby
+export PATH=/usr/ruby20/bin:$PATH
+
 cd $WORKER_DIR
 
 if [[ -f ./config/kochiku-worker.yml.sjc1 ]];then
