@@ -1,0 +1,41 @@
+namespace :deploy do
+  # whitespace and lack of semicolons is important in the execute scripts below.
+  # Do not change them willy nilly.
+
+  desc "Restart the EC2 workers"
+  task :restart_ec2_workers do
+    on roles(:ec2_worker) do
+      execute <<-CMD
+      running_kochiku_flavors=$(sudo monit summary | grep running | egrep -o 'kochiku-worker-(ci|spec-ci)')
+      for flavor in $running_kochiku_flavors
+        do sudo monit restart $flavor
+      done
+      CMD
+    end
+  end
+
+  desc "Restart the macbuild workers"
+  task :restart_mac_workers do
+    on roles(:mac_worker) do
+      execute <<-CMD
+      [ -f #{shared_path}/pids/resque1.pid ] && resque1_pid=$(cat #{shared_path}/pids/resque1.pid)
+      if [ ! -z $resque1_pid ]
+      then kill -QUIT $resque1_pid
+        while ps x | egrep -q "^($resque1_pid)"
+          do echo "Waiting for Resque workers to stop on $HOSTNAME..."
+          sleep 5
+        done
+      else echo "WARNING: did not find PID for a running kochiku-worker."
+      fi
+      CMD
+    end
+  end
+
+
+  desc "Restart all of the build workers"
+  task :restart do
+    invoke 'deploy:restart_mac_workers'
+    invoke 'deploy:restart_ec2_workers'
+  end
+end
+# vi: filetype=ruby
