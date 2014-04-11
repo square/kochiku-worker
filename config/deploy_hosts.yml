@@ -7,20 +7,20 @@ redis_host: "kochiku.corp.squareup.com"
 
 # Change this to the hostnames for the kochiku worker boxes that you want to deploy to
 worker_hosts:
-  - macbuild01.corp.squareup.com
-  - macbuild02.corp.squareup.com
-  - macbuild03.corp.squareup.com
-  - macbuild04.corp.squareup.com
-  - macbuild05.corp.squareup.com
-  - macbuild06.corp.squareup.com
-  - macbuild07.corp.squareup.com
-  - macbuild08.corp.squareup.com
-  - macbuild09.corp.squareup.com
-  - macbuild10.corp.squareup.com
-  - macbuild11.corp.squareup.com
-  - macbuild12.corp.squareup.com
-  - macbuild13.corp.squareup.com
-  - macbuild14.corp.squareup.com
+  - macbuild01.hq.squareup.com
+  - macbuild02.hq.squareup.com
+  - macbuild03.hq.squareup.com
+  - macbuild04.hq.squareup.com
+  - macbuild05.hq.squareup.com
+  - macbuild06.hq.squareup.com
+  - macbuild07.hq.squareup.com
+  - macbuild08.hq.squareup.com
+  - macbuild09.hq.squareup.com
+  - macbuild10.hq.squareup.com
+  - macbuild11.hq.squareup.com
+  - macbuild12.hq.squareup.com
+  - macbuild13.hq.squareup.com
+  - macbuild14.hq.squareup.com
   - macbuild15.corp.squareup.com
   - macbuild16.corp.squareup.com
   - macbuild17.corp.squareup.com
@@ -29,4 +29,5 @@ worker_hosts:
   - macbuild20.corp.squareup.com
   - macbuild21.corp.squareup.com
   - macbuild22.corp.squareup.com
+  - macbuild22.hq.squareup.com
 
