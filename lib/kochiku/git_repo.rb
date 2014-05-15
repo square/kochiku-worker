@@ -64,10 +64,10 @@ module Kochiku
 
         def synchronize_cache_repo(cached_repo_path, remote_name, repo_url, sha, branch)
           if !File.directory?(cached_repo_path)
-            clone_repo(repo_url, cached_repo_path)
+            clone_repo(repo_url, remote_name, cached_repo_path)
           end
           Dir.chdir(cached_repo_path) do
-            remote_url = Cocaine::CommandLine.new("git config --get remote.origin.url").run.chomp
+            remote_url = Cocaine::CommandLine.new("git config --get remote.#{remote_name}.url").run.chomp
             if remote_url != repo_url
               puts "#{remote_url.inspect} does not match #{repo_url.inspect}."
               raise RemoteDoesNotMatch
@@ -97,8 +97,8 @@ module Kochiku
           end
         end
 
-        def clone_repo(repo_url, cached_repo_path)
-          Cocaine::CommandLine.new("git clone", "--recursive #{repo_url} #{cached_repo_path}").run
+        def clone_repo(repo_url, remote_name, cached_repo_path)
+          Cocaine::CommandLine.new("git clone", "--recursive --origin #{remote_name} #{repo_url} #{cached_repo_path}").run
         end
 
         def synchronize_with_remote(name, sha, branch = nil)
