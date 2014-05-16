@@ -4,7 +4,6 @@ module Kochiku
   module Worker
     class GitRepo
       class RefNotFoundError < StandardError; end
-      class RemoteDoesNotMatch < StandardError; end
 
       WORKING_DIR = File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'tmp', 'build-partition'))
 
@@ -64,18 +63,13 @@ module Kochiku
 
         def synchronize_cache_repo(cached_repo_path, remote_name, repo_url, sha, branch)
           if !File.directory?(cached_repo_path)
-            clone_repo(repo_url, cached_repo_path)
+            clone_repo(repo_url, remote_name, cached_repo_path)
           end
           Dir.chdir(cached_repo_path) do
-            remote_url = Cocaine::CommandLine.new("git config --get remote.origin.url").run.chomp
+            remote_url = Cocaine::CommandLine.new("git config --get remote.#{remote_name}.url").run.chomp
             if remote_url != repo_url
-              puts "#{remote_url.inspect} does not match #{repo_url.inspect}."
-              raise RemoteDoesNotMatch
-            end
-
-            remote_list = `git remote -v | grep #{remote_name}`
-            unless remote_list.include?(remote_name)
-              run! "git remote add #{remote_name} #{repo_url}"
+              puts "#{remote_url.inspect} does not match #{repo_url.inspect}. Updating it."
+              Cocaine::CommandLine.new("git remote set-url #{remote_name} #{repo_url}").run
             end
 
             synchronize_with_remote(remote_name, sha, branch)
@@ -86,9 +80,6 @@ module Kochiku
 
             Cocaine::CommandLine.new("git submodule update", "--init --quiet").run
           end
-        rescue RemoteDoesNotMatch
-          FileUtils.rm_rf(cached_repo_path)
-          retry
         end
 
         def run!(cmd)
@@ -97,8 +88,8 @@ module Kochiku
           end
         end
 
-        def clone_repo(repo_url, cached_repo_path)
-          Cocaine::CommandLine.new("git clone", "--recursive #{repo_url} #{cached_repo_path}").run
+        def clone_repo(repo_url, remote_name, cached_repo_path)
+          Cocaine::CommandLine.new("git clone", "--recursive --origin #{remote_name} #{repo_url} #{cached_repo_path}").run
         end
 
         def synchronize_with_remote(name, sha, branch = nil)
