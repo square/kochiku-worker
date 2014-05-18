@@ -1,6 +1,20 @@
 require 'cocaine'
 
 module GitStrategy
+  # Keeps a full clone locally on the worker and uses it as a cache.
+  # Uses git clone --local for fast clones and checkouts. Since caches are kept
+  # in the same directory as temporary checkouts, they're guaranteed to be on the
+  # same filesystem and git can hardlink objects under the hood.
+  #
+  # Scaling:
+  # Git operations are required to update the local cache, and git operations
+  # are cpu-intensive on the server side. Eventually the server will become constrained
+  # on cpu. At that point, a read-only mirror can be created to absorb the load of the
+  # worker cluster, or you can switch to the shared cache strategy.
+  #
+  # When to use:
+  # This is the most basic and default git strategy. Use it when you aren't running
+  # enough workers to overwhelm your primary git server or git mirror.
   class LocalCache
     class << self
       # TODO: make this conform to the same api as nfs strategy. don't need cache name, remote name, etc

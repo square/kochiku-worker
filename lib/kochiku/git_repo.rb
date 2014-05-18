@@ -13,8 +13,8 @@ module Kochiku
             case Kochiku::Worker.settings.git_strategy
               when 'localcache'
                 GitStrategy::LocalCache.clone_and_checkout(dir, cached_repo_name, remote_name, repo_url, sha, branch)
-              when 'nfs'
-                GitStrategy::Nfs.clone_and_checkout(dir, repo_url, branch)
+              when 'sharedcache'
+                GitStrategy::SharedCache.clone_and_checkout(dir, repo_url, branch)
               else
                 raise 'unknown git strategy'
             end
