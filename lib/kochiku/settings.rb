@@ -12,6 +12,7 @@ module Kochiku
         contents["build_master"] = user_defined_options["build_master"] || "localhost"
         contents["build_strategy"] = user_defined_options["build_strategy"] || "no_op"
         contents["redis_host"] = user_defined_options["redis_host"] || "localhost"
+        contents["git_strategy"] = user_defined_options["git_strategy"] || "localcache"
 
         @keys = contents.keys.sort
 
