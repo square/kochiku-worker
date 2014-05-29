@@ -12,10 +12,18 @@ module Kochiku
         contents["build_master"] = user_defined_options["build_master"] || "localhost"
         contents["build_strategy"] = user_defined_options["build_strategy"] || "no_op"
         contents["redis_host"] = user_defined_options["redis_host"] || "localhost"
+        contents["git_strategy"] = user_defined_options["git_strategy"] || "localcache"
+        contents["git_shared_root"] = user_defined_options["git_shared_root"]
+
+        validate!(contents)
 
         @keys = contents.keys.sort
 
         super(contents)
+      end
+
+      def validate!(config)
+        raise 'git_shared_root required for sharedcache.' if config["git_strategy"] == "sharedcache" && config["git_shared_root"].nil?
       end
 
       def inspect
