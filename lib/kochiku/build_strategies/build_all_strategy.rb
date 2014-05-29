@@ -26,7 +26,7 @@ module BuildStrategy
     end
 
     def log_files_glob
-      ['log/*log']
+      ['log/*log','surefire-reports/*.html']
     end
 
     def execute_with_timeout_and_kill(command, timeout)
