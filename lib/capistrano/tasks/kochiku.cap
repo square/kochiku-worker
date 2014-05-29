@@ -16,13 +16,20 @@ namespace :kochiku do
   end
 
   task :create_kochiku_worker_yaml do
-    on roles(:worker) do
-      config = <<-END.gsub(/^\s*/, '')
-        build_master: #{HostSettings.kochiku_web_host}
-        build_strategy: build_all
-        redis_host: #{HostSettings.redis_host}
-      END
+    config = <<-END.gsub(/^\s*/, '')
+      build_master: #{HostSettings.kochiku_web_host}
+      build_strategy: build_all
+      redis_host: #{HostSettings.redis_host}
+    END
+    config_with_sharedcache = config + <<-END.gsub(/^\s*/, '')
+      git_strategy: sharedcache
+      git_shared_root: /mnt/nfs/git
+    END
+    on roles(:mac_worker) do
       upload! StringIO.new(config), release_path.join("config/kochiku-worker.yml")
+    end
+    on roles(:ec2_worker) do
+      upload! StringIO.new(config_with_sharedcache), release_path.join("config/kochiku-worker.yml")
     end
   end
 end
