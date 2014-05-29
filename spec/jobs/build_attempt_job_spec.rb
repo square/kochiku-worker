@@ -27,7 +27,7 @@ describe BuildAttemptJob do
 
   describe "#perform" do
     before do
-      allow(Kochiku::Worker::GitRepo).to receive(:system).and_return(true)
+      allow(GitStrategy::LocalCache).to receive(:system).and_return(true)
     end
 
     context "build_attempt has been aborted" do
