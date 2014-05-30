@@ -43,8 +43,10 @@ class BuildAttemptJob < JobBase
     benchmark("Build Attempt #{@build_attempt_id} collecting logs") do
       Dir[*file_glob].each do |path|
         if File.file?(path) && !File.zero?(path)
-          Cocaine::CommandLine.new("gzip", path).run
-          path += '.gz'
+          if path =~ /log$/
+            Cocaine::CommandLine.new("gzip", path).run
+            path += '.gz'
+          end
           upload_log_file(File.new(path))
         end
       end
