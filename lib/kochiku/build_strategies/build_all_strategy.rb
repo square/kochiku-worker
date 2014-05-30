@@ -1,21 +1,4 @@
 module BuildStrategy
-  def self.execute_with_timeout(command, timeout, log_file)
-    dir = File.dirname(log_file)
-    FileUtils.mkdir_p(dir) unless Dir.exists?(dir)
-    File.open(log_file, "a") do |file|
-      file.write(Array(command).join(" ") + "\n")
-    end
-    pid = nil
-    Bundler.with_clean_env do
-      pid = Process.spawn(*command, :out => [log_file, "a"], :err => [:child, :out])
-    end
-
-    Timeout.timeout(timeout) do
-      Process.wait(pid)
-    end
-    $?.exitstatus == 0
-  end
-
   class BuildAllStrategy
     class ErrorFoundInLogError < StandardError; end
 
@@ -30,12 +13,10 @@ module BuildStrategy
     end
 
     def execute_with_timeout_and_kill(command, timeout)
-      begin
-        BuildStrategy.execute_with_timeout(command, timeout, LOG_FILE)
-      ensure
-        kill_all_child_processes
-        check_log_for_errors!
-      end
+      BuildStrategy.execute_with_timeout(command, timeout, LOG_FILE)
+    ensure
+      kill_all_child_processes
+      check_log_for_errors!
     end
 
     def kill_all_child_processes
