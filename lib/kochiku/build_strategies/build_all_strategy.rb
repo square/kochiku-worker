@@ -52,16 +52,16 @@ module BuildStrategy
       end
     end
 
-    def kill_process(pid, sig = "HUP")
+    def kill_process(pid, sig = "TERM")
       begin
         Timeout.timeout(10) do
           Process.kill(sig, pid)
           Process.wait(pid)
         end
       rescue Timeout::Error
-        # The process did not exit from SIGHUP within the timeout
+        # The process did not exit within the timeout
         # no more CPU time for the child process
-        kill_process(pid, 9) if sig == "HUP"
+        kill_process(pid, 9)
       rescue Errno::ESRCH, Errno::ECHILD # Process has already exited
       end
     end
