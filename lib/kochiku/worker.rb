@@ -11,6 +11,7 @@ require 'kochiku/git_strategies/local_cache_strategy'
 require 'kochiku/git_strategies/shared_cache_strategy'
 
 
+require 'kochiku/build_strategy'
 require 'kochiku/build_strategies/build_all_strategy'
 require 'kochiku/build_strategies/log_and_random_fail_strategy'
 require 'kochiku/build_strategies/no_op_strategy'
