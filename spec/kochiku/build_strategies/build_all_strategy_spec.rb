@@ -19,7 +19,7 @@ describe BuildStrategy::BuildAllStrategy do
       start_time = Time.now
       expect {
         subject.execute_with_timeout_and_kill("sleep 3 #{dev_null}", 0.1)
-      }.to raise_error(Timeout::Error)
+      }.to_not raise_error
       expect(Time.now - start_time).to be_within(0.3).of(0.1)
       expect {
         Process.kill(0, @spawned_pid)
@@ -37,11 +37,11 @@ describe BuildStrategy::BuildAllStrategy do
     end
 
     it "should return true if it succeeds" do
-      expect(subject.execute_with_timeout_and_kill("pwd #{dev_null}", 0.1)).to eq(true)
+      expect(subject.execute_with_timeout_and_kill("true #{dev_null}", 0.1)).to eq(true)
     end
 
     it "should return false if it fails" do
-      expect(subject.execute_with_timeout_and_kill("ls /tmp/afilethatdoesnotexist #{dev_null}", 0.1)).to eq(false)
+      expect(subject.execute_with_timeout_and_kill("false #{dev_null}", 0.1)).to eq(false)
     end
 
     it "should raise a ErrorFoundInLogError for known errors in output" do
