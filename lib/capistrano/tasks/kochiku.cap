@@ -1,6 +1,6 @@
 namespace :kochiku do
   task :setup do
-    on roles(:worker) do
+    on roles(:all) do
       execute :mkdir, '-p', "#{shared_path}/{build-partition,pids}"
     end
   end
@@ -9,7 +9,7 @@ namespace :kochiku do
   task :symlinks do
     # Intentionally not using linked_dirs for these paths because it would
     # break the folder structure that we had in place before Capistrano 3.
-    on roles(:worker) do
+    on roles(:all) do
       execute :ln, '-nfFs', shared_path.join('build-partition'), release_path.join('tmp/build-partition')
       execute :ln, '-nfFs', shared_path.join('pids'), release_path.join('tmp/pids')
     end

@@ -9,7 +9,7 @@ namespace :deploy do
 
   # desc 'Restart workers'
   # task :restart do
-  #   on roles(:worker) do
+  #   on roles(:all) do
   #     # Necessary step to restart the Resque workers specific to your
   #     # deployment
   #   end
