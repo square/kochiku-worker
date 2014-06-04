@@ -23,11 +23,10 @@ worker_hosts:
   - macbuild14.hq.squareup.com
   - macbuild15.corp.squareup.com
   - macbuild16.corp.squareup.com
-  - macbuild17.corp.squareup.com
+  # - macbuild17.corp.squareup.com # dead
   - macbuild18.corp.squareup.com
   - macbuild19.corp.squareup.com
   - macbuild20.corp.squareup.com
   - macbuild21.corp.squareup.com
-  - macbuild22.corp.squareup.com
   - macbuild22.hq.squareup.com
 
