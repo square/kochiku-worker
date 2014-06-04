@@ -94,7 +94,7 @@ class BuildAttemptJob < JobBase
 
   def signal_build_is_starting
     benchmark("Signal build attempt #{@build_attempt_id} starting") do
-      build_start_url = "https://#{Kochiku::Worker.settings.build_master}/build_attempts/#{@build_attempt_id}/start"
+      build_start_url = "#{url_base}/start"
 
       begin
         result = RestClient::Request.execute(:method => :post, :url => build_start_url, :payload => {:builder => hostname}, :headers => {:accept => :json})
@@ -108,7 +108,7 @@ class BuildAttemptJob < JobBase
 
   def signal_build_is_finished(result)
     benchmark("Signal build attempt #{@build_attempt_id} finished") do
-      build_finish_url = "https://#{Kochiku::Worker.settings.build_master}/build_attempts/#{@build_attempt_id}/finish"
+      build_finish_url = "#{url_base}/finish"
 
       begin
         RestClient::Request.execute(:method => :post, :url => build_finish_url, :payload => {:state => result}, :headers => {:accept => :json}, :timeout => 60, :open_timeout => 60)
@@ -126,7 +126,7 @@ class BuildAttemptJob < JobBase
   end
 
   def upload_log_file(file)
-    log_artifact_upload_url = "https://#{Kochiku::Worker.settings.build_master}/build_attempts/#{@build_attempt_id}/build_artifacts"
+    log_artifact_upload_url = "#{url_base}/build_artifacts"
 
     begin
       RestClient::Request.execute(:method => :post, :url => log_artifact_upload_url, :payload => {:build_artifact => {:log_file => file}}, :headers => {:accept => :xml}, :timeout => 60 * 5)
@@ -168,5 +168,10 @@ class BuildAttemptJob < JobBase
       end_time = Time.now
       logger.info("[#{msg}] finished in #{end_time - start_time}")
     end
+  end
+
+  def url_base
+    "#{Kochiku::Worker.settings.kochiku_web_server_protocol}://" +
+      "#{Kochiku::Worker.settings.kochiku_web_server_host}/build_attempts/#{@build_attempt_id}"
   end
 end

@@ -18,7 +18,8 @@ namespace :kochiku do
   task :create_kochiku_worker_yaml do
     on roles(:all) do
       config = <<-END.gsub(/^\s*/, '')
-        build_master: #{HostSettings.kochiku_web_host}
+        kochiku_web_server_host: #{HostSettings.kochiku_web_host}
+        kochiku_web_server_protocol: #{HostSettings.kochiku_web_protocol}
         build_strategy: build_all
         redis_host: #{HostSettings.redis_host}
       END

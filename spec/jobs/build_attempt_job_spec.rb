@@ -3,7 +3,8 @@ require 'fileutils'
 require 'json'
 
 describe BuildAttemptJob do
-  let(:master_host) { "https://" + Kochiku::Worker.settings.build_master }
+  let(:master_host) { Kochiku::Worker.settings.kochiku_web_server_protocol +
+                      "://" + Kochiku::Worker.settings.kochiku_web_server_host }
   let(:build_attempt_id) { "42" }
   let(:build_part_kind) { "test" }
   let(:build_ref) { "123abc" }

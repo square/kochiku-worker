@@ -1,5 +1,6 @@
 # set this to the location where Kochiku web is running
 kochiku_web_host: "kochiku.example.com"
+kochiku_web_protocol: "https"
 
 # Change this if you want to run Redis on a different machine than the build master
 # This needs to be the same as the Redis instance that the Kochiku application uses
