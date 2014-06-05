@@ -91,32 +91,31 @@ class BuildAttemptJob < JobBase
     Kochiku::Worker.build_strategy.execute_build(build_kind, test_files, test_command, timeout, options)
   end
 
-  def retry_http(reraise, &block)
+  def with_http_retries
     yield
   rescue Errno::EHOSTUNREACH, RestClient::Exception
     tries = (tries || 0) + 1
     if tries < 3
       sleep 1
       retry
-    elsif reraise
-      raise
     end
   end
 
   def signal_build_is_starting
+    result = nil
     benchmark("Signal build attempt #{@build_attempt_id} starting") do
       build_start_url = "#{url_base}/start"
-      retry_http(true) do
+      with_http_retries do
         result = RestClient::Request.execute(:method => :post, :url => build_start_url, :payload => {:builder => hostname}, :headers => {:accept => :json})
-        JSON.parse(result)["build_attempt"]["state"].to_sym
       end
     end
+    JSON.parse(result)["build_attempt"]["state"].to_sym
   end
 
   def signal_build_is_finished(result)
     benchmark("Signal build attempt #{@build_attempt_id} finished") do
       build_finish_url = "#{url_base}/finish"
-      retry_http(true) do
+      with_http_retries do
         RestClient::Request.execute(:method => :post, :url => build_finish_url, :payload => {:state => result}, :headers => {:accept => :json}, :timeout => 60, :open_timeout => 60)
       end
     end
@@ -124,9 +123,12 @@ class BuildAttemptJob < JobBase
 
   def upload_log_file(file)
     log_artifact_upload_url = "#{url_base}/build_artifacts"
-    retry_http(false) do
+    with_http_retries do
       RestClient::Request.execute(:method => :post, :url => log_artifact_upload_url, :payload => {:build_artifact => {:log_file => file}}, :headers => {:accept => :xml}, :timeout => 60 * 5)
     end
+  rescue Errno::EHOSTUNREACH, RuntimeError => e
+    # log exception and continue. A failed log file upload should not interrupt the BuildAttempt
+    logger.error("Upload of artifact (#{file.to_s}) failed: #{e.message}")
   end
 
   def handle_git_ref_not_found(exception)
