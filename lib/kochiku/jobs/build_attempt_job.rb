@@ -25,8 +25,7 @@ class BuildAttemptJob < JobBase
 
   def perform
     logger.info("Build Attempt #{@build_attempt_id} perform starting")
-    build_status = signal_build_is_starting
-    return if build_status == :aborted
+    return if signal_build_is_starting == :aborted
 
     Kochiku::Worker::GitRepo.inside_copy(@repo_name, @remote_name, @repo_url, @build_ref, @branch) do
       begin
@@ -92,16 +91,24 @@ class BuildAttemptJob < JobBase
     Kochiku::Worker.build_strategy.execute_build(build_kind, test_files, test_command, timeout, options)
   end
 
+  def retry_http(reraise, &block)
+    yield
+  rescue Errno::EHOSTUNREACH, RestClient::Exception
+    tries = (tries || 0) + 1
+    if tries < 3
+      sleep 1
+      retry
+    elsif reraise
+      raise
+    end
+  end
+
   def signal_build_is_starting
     benchmark("Signal build attempt #{@build_attempt_id} starting") do
       build_start_url = "#{url_base}/start"
-
-      begin
+      retry_http(true) do
         result = RestClient::Request.execute(:method => :post, :url => build_start_url, :payload => {:builder => hostname}, :headers => {:accept => :json})
         JSON.parse(result)["build_attempt"]["state"].to_sym
-      rescue RestClient::Exception => e
-        logger.error("Start notification of build (#{@build_attempt_id}) failed: #{e.message}")
-        raise
       end
     end
   end
@@ -109,35 +116,16 @@ class BuildAttemptJob < JobBase
   def signal_build_is_finished(result)
     benchmark("Signal build attempt #{@build_attempt_id} finished") do
       build_finish_url = "#{url_base}/finish"
-
-      begin
+      retry_http(true) do
         RestClient::Request.execute(:method => :post, :url => build_finish_url, :payload => {:state => result}, :headers => {:accept => :json}, :timeout => 60, :open_timeout => 60)
-      rescue Errno::EHOSTUNREACH
-        tries = (tries || 0) + 1
-        if tries < 2
-          sleep 1
-          retry
-        end
-      rescue RestClient::Exception => e
-        logger.error("Finish notification of build (#{@build_attempt_id}) failed: #{e.message}")
-        raise
       end
     end
   end
 
   def upload_log_file(file)
     log_artifact_upload_url = "#{url_base}/build_artifacts"
-
-    begin
+    retry_http(false) do
       RestClient::Request.execute(:method => :post, :url => log_artifact_upload_url, :payload => {:build_artifact => {:log_file => file}}, :headers => {:accept => :xml}, :timeout => 60 * 5)
-    rescue Errno::EHOSTUNREACH
-      tries = (tries || 0) + 1
-      if tries < 2
-        sleep 1
-        retry
-      end
-    rescue RestClient::Exception => e
-      logger.error("Upload of artifact (#{file.to_s}) failed: #{e.message}")
     end
   end
 
