@@ -95,8 +95,8 @@ class BuildAttemptJob < JobBase
     yield
   rescue Errno::EHOSTUNREACH, RestClient::Exception
     tries = (tries || 0) + 1
-    if tries < 3
-      sleep 1
+    if tries <= 3
+      sleep(tries**tries)
       retry
     end
   end
