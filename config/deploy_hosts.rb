@@ -3,6 +3,10 @@ class ConfigAccessor
     @hash = YAML.load(yaml)
   end
 
+  def kochiku_web_protocol
+    @hash['kochiku_web_protocol']
+  end
+
   def kochiku_web_host
     @hash['kochiku_web_host']
   end

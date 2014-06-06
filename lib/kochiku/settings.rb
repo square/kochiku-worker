@@ -9,7 +9,8 @@ module Kochiku
         user_defined_options = (File.exist?(config_file) && yaml = YAML.load_file(config_file)) ? yaml : {}
 
         contents = {}
-        contents["build_master"] = user_defined_options["build_master"] || "localhost"
+        contents["kochiku_web_server_host"] = user_defined_options["kochiku_web_server_host"] || "localhost"
+        contents["kochiku_web_server_protocol"] = user_defined_options["kochiku_web_server_protocol"]
         contents["build_strategy"] = user_defined_options["build_strategy"] || "no_op"
         contents["redis_host"] = user_defined_options["redis_host"] || "localhost"
         contents["git_strategy"] = user_defined_options["git_strategy"] || "localcache"
