@@ -156,27 +156,23 @@ describe BuildAttemptJob do
       end
     end
 
-    it "should close cleanly after retrying" do
+    it "should be able to retry, even if the IO object has been closed" do
       stub_request(:post, "#{master_host}/build_attempts/#{build_attempt_id}/build_artifacts").to_return(:status => 500, :body => "", :headers => {})
       subject.stub(:sleep)
 
       Dir.mktmpdir do |dir|
         Dir.chdir(dir) do
-          wanted_logs = ['a.wantedlog', 'b.wantedlog', 'd/c.wantedlog']
+          log_name = 'a.log'
 
-          FileUtils.mkdir 'd'
-          (wanted_logs + ['e.unwantedlog']).each do |file_path|
-            File.open(file_path, 'w') do |file|
-              file.puts "Carrierwave won't save blank files"
-            end
+          File.open(log_name, 'w') do |file|
+            file.puts "Carrierwave won't save blank files"
           end
 
-          subject.collect_logs('**/*.wantedlog')
+          expect {
+            subject.collect_logs('**/*.log')
+          }.not_to raise_error  # specifically, IOError
 
-          wanted_logs.each do |artifact|
-            log_name = File.basename(artifact)
-            expect(WebMock).to have_requested(:post, "#{master_host}/build_attempts/#{build_attempt_id}/build_artifacts").times(4).with { |req| req.body.include?(log_name) }
-          end
+          expect(WebMock).to have_requested(:post, "#{master_host}/build_attempts/#{build_attempt_id}/build_artifacts").times(4)
         end
       end
     end
