@@ -124,11 +124,14 @@ class BuildAttemptJob < JobBase
   def upload_log_file(file)
     log_artifact_upload_url = "#{url_base}/build_artifacts"
     with_http_retries do
-      RestClient::Request.execute(:method => :post, :url => log_artifact_upload_url, :payload => {:build_artifact => {:log_file => file}}, :headers => {:accept => :xml}, :timeout => 60 * 5)
+      file.rewind
+      RestClient::Request.execute(:method => :post, :url => log_artifact_upload_url, :payload => {:build_artifact => {:log_file => file.clone}}, :headers => {:accept => :xml}, :timeout => 60 * 5)
     end
   rescue Errno::EHOSTUNREACH, RuntimeError => e
     # log exception and continue. A failed log file upload should not interrupt the BuildAttempt
     logger.error("Upload of artifact (#{file.to_s}) failed: #{e.message}")
+  ensure
+    file.close
   end
 
   def handle_git_ref_not_found(exception)

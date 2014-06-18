@@ -19,6 +19,7 @@ require 'kochiku/build_strategy_factory'
 
 require 'kochiku/jobs/job_base'
 require 'kochiku/jobs/build_attempt_job'
+require 'kochiku/jobs/shutdown_instance_job'
 
 module Kochiku
   module Worker
