@@ -1,5 +1,6 @@
-# config valid only for Capistrano 3.1
-lock '3.1.0'
+# Lock version to protect against cap command being called without bundle exec
+# and executing with another version
+lock '3.2.1'
 
 set :application, "kochiku-worker"
 set :repo_url,  "https://github.com/square/kochiku-worker.git"
