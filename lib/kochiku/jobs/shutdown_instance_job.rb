@@ -9,7 +9,7 @@ class ShutdownInstanceJob < JobBase
     Process.kill("QUIT", Process.ppid)
 
     # Shutdown the instance 1 minute from now. Requires NOPASSWD sudo
-    pid = Process.spawn("sudo shutdown -h +1m")
+    pid = Process.spawn("sudo shutdown -h +1")
     Process.detach(pid)
   end
 end
