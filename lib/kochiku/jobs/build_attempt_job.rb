@@ -98,6 +98,8 @@ class BuildAttemptJob < JobBase
     if tries <= 3
       sleep(tries**tries)
       retry
+    else
+      raise
     end
   end
 
