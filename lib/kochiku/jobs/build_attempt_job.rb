@@ -83,7 +83,7 @@ class BuildAttemptJob < JobBase
   private
 
   def hostname
-    `hostname`.strip
+    ENV["HOSTNAME"]
   end
 
   def run_tests(build_kind, test_files, test_command, timeout, options)
