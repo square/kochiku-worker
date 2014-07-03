@@ -49,10 +49,9 @@ module GitStrategy
             shared_repo_dir = File.join(Kochiku::Worker.settings.git_shared_root, url || 'does-not-exist')
 
             if Dir.exists?(shared_repo_dir)
-              Cocaine::CommandLine.new('git', 'submodule --quiet update --reference :shared :path').run(shared: shared_repo_dir, path: path)
-            else
-              Cocaine::CommandLine.new('git', 'submodule --quiet update :path').run(path: path)
+              Cocaine::CommandLine.new('git', 'config --replace-all submodule.:path.url :shared').run(shared: shared_repo_dir, path: path)
             end
+            Cocaine::CommandLine.new('git', 'submodule --quiet update :path').run(path: path)
           end
         end
       end

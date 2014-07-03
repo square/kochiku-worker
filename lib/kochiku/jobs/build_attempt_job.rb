@@ -83,7 +83,7 @@ class BuildAttemptJob < JobBase
   private
 
   def hostname
-    `hostname`.strip
+    ENV["HOSTNAME"]
   end
 
   def run_tests(build_kind, test_files, test_command, timeout, options)
@@ -98,6 +98,8 @@ class BuildAttemptJob < JobBase
     if tries <= 3
       sleep(tries**tries)
       retry
+    else
+      raise
     end
   end
 

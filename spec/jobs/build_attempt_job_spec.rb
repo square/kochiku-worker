@@ -177,4 +177,18 @@ describe BuildAttemptJob do
       end
     end
   end
+
+  describe "#with_http_retries" do
+    before do
+      allow(subject).to receive(:sleep)
+    end
+
+    it "should raise after retrying" do
+      expect {
+        subject.send(:with_http_retries) do
+          raise Errno::EHOSTUNREACH
+        end
+      }.to raise_error(Errno::EHOSTUNREACH)
+    end
+  end
 end
