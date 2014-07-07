@@ -1,3 +1,4 @@
+require 'socket'
 require 'rest-client'
 
 class BuildAttemptJob < JobBase
@@ -83,7 +84,7 @@ class BuildAttemptJob < JobBase
   private
 
   def hostname
-    ENV["HOSTNAME"]
+    Socket.gethostname
   end
 
   def run_tests(build_kind, test_files, test_command, timeout, options)
