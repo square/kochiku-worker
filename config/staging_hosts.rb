@@ -20,7 +20,7 @@ class ConfigAccessor
   end
 end
 
-CONF_FILE = File.expand_path('deploy_hosts.yml', File.dirname(__FILE__))
+CONF_FILE = File.expand_path('staging_hosts.yml', File.dirname(__FILE__))
 
 if !File.exist?(CONF_FILE)
   raise "#{CONF_FILE} is required to deploy kochiku-worker"

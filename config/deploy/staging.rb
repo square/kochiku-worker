@@ -1,4 +1,4 @@
-require "./config/production_hosts"
+require "./config/staging_hosts"
 
 # The primary server in each group is considered to be the first unless any
 # hosts have the primary property set.
