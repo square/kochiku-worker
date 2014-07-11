@@ -5,11 +5,14 @@ module BuildStrategy
     LOG_FILE = "log/stdout.log"
 
     def execute_build(build_kind, test_files, test_command, timeout, options)
+      if options['log_file_globs']
+        @log_files = options['log_file_globs'] << LOG_FILE
+      end
       execute_with_timeout_and_kill(ci_command(build_kind, test_files, test_command, options), timeout)
     end
 
     def log_files_glob
-      ['log/*log']
+      @log_files ||= [LOG_FILE]
     end
 
     def execute_with_timeout_and_kill(command, timeout)
