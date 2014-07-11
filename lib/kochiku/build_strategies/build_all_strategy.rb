@@ -12,7 +12,7 @@ module BuildStrategy
     end
 
     def log_files_glob
-      @log_files ||= ['log/*log','surefire-reports/*.html']
+      @log_files ||= [LOG_FILE,'surefire-reports/*.html']
     end
 
     def execute_with_timeout_and_kill(command, timeout)
