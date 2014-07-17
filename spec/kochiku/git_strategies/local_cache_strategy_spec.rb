@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe GitStrategy::LocalCache do
+RSpec.describe GitStrategy::LocalCache do
   describe "#synchronize_with_remote" do
     it "should throw an exception after the third fetch attempt" do
       allow(Kochiku::Worker).to receive(:logger) { double('logger', :warn => nil) }

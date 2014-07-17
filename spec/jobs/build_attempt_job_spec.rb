@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'fileutils'
 require 'json'
 
-describe BuildAttemptJob do
+RSpec.describe BuildAttemptJob do
   let(:master_host) { Kochiku::Worker.settings.kochiku_web_server_protocol +
                       "://" + Kochiku::Worker.settings.kochiku_web_server_host }
   let(:build_attempt_id) { "42" }
@@ -119,7 +119,7 @@ describe BuildAttemptJob do
 
   describe "#collect_logs" do
     before do
-      Cocaine::CommandLine.unstub(:new)    # it is desired that the gzip command to go through
+      allow(Cocaine::CommandLine).to receive(:new).with("gzip", anything).and_call_original
       stub_request(:any, /#{master_host}.*/)
     end
 
@@ -158,7 +158,7 @@ describe BuildAttemptJob do
 
     it "should be able to retry, even if the IO object has been closed" do
       stub_request(:post, "#{master_host}/build_attempts/#{build_attempt_id}/build_artifacts").to_return(:status => 500, :body => "", :headers => {})
-      subject.stub(:sleep)
+      allow(subject).to receive(:sleep)
 
       Dir.mktmpdir do |dir|
         Dir.chdir(dir) do
