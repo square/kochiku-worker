@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'fileutils'
 require 'json'
 
-describe BuildAttemptJob do
+RSpec.describe BuildAttemptJob do
   let(:master_host) { Kochiku::Worker.settings.kochiku_web_server_protocol +
                       "://" + Kochiku::Worker.settings.kochiku_web_server_host }
   let(:build_attempt_id) { "42" }

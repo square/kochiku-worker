@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe BuildStrategy::BuildAllStrategy do
+RSpec.describe BuildStrategy::BuildAllStrategy do
   let(:dev_null) { "2>/dev/null 1>/dev/null" }
   subject{ BuildStrategy::BuildAllStrategy.new }
 
