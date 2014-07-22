@@ -12,11 +12,18 @@ Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].each {|f| load f}
 
 
 RSpec.configure do |config|
-  config.mock_with :rspec
+  config.expose_dsl_globally = false
 
-  config.expect_with :rspec do |c|
-    c.syntax = :expect
+  config.mock_with :rspec do |mocks|
+    mocks.syntax = :expect
+    mocks.patch_marshal_to_support_partial_doubles = false
   end
+
+  config.mock_with :rspec do |expectations|
+    expectations.syntax = :expect
+  end
+
+  config.disable_monkey_patching! # same as what's above
 
   config.before :each do
     WebMock.disable_net_connect!

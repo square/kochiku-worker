@@ -15,6 +15,6 @@ group :development do
 end
 
 group :test do
-  gem "rspec", "< 2.99.0"
+  gem "rspec", "~> 3.0"
   gem "webmock", require: false
 end
