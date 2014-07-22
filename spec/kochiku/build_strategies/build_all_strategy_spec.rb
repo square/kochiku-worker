@@ -44,10 +44,16 @@ RSpec.describe BuildStrategy::BuildAllStrategy do
       expect(subject.execute_with_timeout_and_kill("false #{dev_null}", 0.1)).to eq(false)
     end
 
-    it "should raise a ErrorFoundInLogError for known errors in output" do
+    it "should raise a ErrorFoundInLogError for known errors in output of a failed build" do
       expect {
-        subject.execute_with_timeout_and_kill("echo 'couldn\'t find resque worker'", 0.1)
+        subject.execute_with_timeout_and_kill("false # couldn't find resque worker", 0.5)
       }.to raise_error(BuildStrategy::BuildAllStrategy::ErrorFoundInLogError)
+    end
+
+    it "won't raise ErrorFoundInLogError when the build passes" do
+      expect {
+        subject.execute_with_timeout_and_kill("true # couldn't find resque worker", 0.5)
+      }.to_not raise_error
     end
   end
 

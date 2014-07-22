@@ -16,10 +16,10 @@ module BuildStrategy
     end
 
     def execute_with_timeout_and_kill(command, timeout)
-      BuildStrategy.execute_with_timeout(command, timeout, LOG_FILE)
+      success = BuildStrategy.execute_with_timeout(command, timeout, LOG_FILE)
     ensure
       kill_all_child_processes
-      check_log_for_errors!
+      check_log_for_errors! unless success
     end
 
     def kill_all_child_processes
