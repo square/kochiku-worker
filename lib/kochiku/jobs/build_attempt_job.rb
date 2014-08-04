@@ -94,7 +94,7 @@ class BuildAttemptJob < JobBase
 
   def with_http_retries
     yield
-  rescue Errno::EHOSTUNREACH, RestClient::Exception
+  rescue Errno::EHOSTUNREACH, RestClient::Exception, SocketError
     tries = (tries || 0) + 1
     if tries <= 3
       sleep(tries**tries)
