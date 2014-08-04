@@ -17,4 +17,4 @@ if [[ -f ./config/kochiku-worker.yml.sjc1 ]];then
 fi
 
 exec setsid /usr/ruby20/bin/bundle exec rake resque:work \
-  --trace HOSTNAME=$HOSTNAME QUEUES=${queues:-"*"} VVERBOSE=1 </dev/null
+  --trace QUEUES=${queues:-"*"} TERM_CHILD=1 INTERVAL=15 </dev/null
