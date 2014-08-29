@@ -16,38 +16,62 @@ module BuildStrategy
     end
 
     def execute_with_timeout_and_kill(command, timeout)
-      success = BuildStrategy.execute_with_timeout(command, timeout, LOG_FILE)
+      success, pid = BuildStrategy.execute_with_timeout(command, timeout, LOG_FILE)
+      success
     ensure
-      kill_all_child_processes
-      check_log_for_errors! unless success
-    end
-
-    def kill_all_child_processes
-      did_kill = false
-      (child_processes | processes_in_same_group).each do |process_to_kill|
-        kill_process(process_to_kill)
-        did_kill ||= true
-      end
+      did_kill = kill_process_group(pid, 15)
 
       if did_kill
         File.open(LOG_FILE, 'a') do |file|
           file.write("\n\n******** Process taking too long, Kochiku killing it NOW ************\n")
         end
       end
+
+      check_log_for_errors! unless success
     end
 
-    def kill_process(pid, sig = "TERM")
+    def kill_process_group(pid, sig = 15)
+      process_timeout = false
+
+      # Kill the head process
+      # We cannot kill the process group if head is a zombie process
       begin
         Timeout.timeout(10) do
           Process.kill(sig, pid)
           Process.wait(pid)
         end
       rescue Timeout::Error
-        # The process did not exit within the timeout
-        # no more CPU time for the child process
-        kill_process(pid, 9)
+        process_timeout = true
+        Process.kill(9, pid)
+        Process.wait(pid)
       rescue Errno::ESRCH, Errno::ECHILD # Process has already exited
       end
+
+      # Kill the rest of the process group
+      begin
+        Timeout.timeout(10) do
+          if count_processes_in_same_group(pid) == 0
+            return process_timeout
+          else
+            process_timeout = true
+          end
+
+          # (-sig) sends sig to the entire process group
+          Process.kill(-sig, pid)
+
+          # wait for all processes in group to exit
+          while count_processes_in_same_group(pid) > 0 do
+            sleep 1
+          end
+        end
+      rescue Timeout::Error
+        # The processes did not exit within the timeout
+        # no more CPU time for the child processes
+        sleep 1
+        kill_process_group(pid, 9)
+      rescue Errno::ESRCH, Errno::ECHILD # Process has already exited
+      end
+      process_timeout
     end
 
     def child_processes
@@ -59,10 +83,9 @@ module BuildStrategy
       descendants[Process.pid].flatten - [Process.pid, ps_pid]
     end
 
-    def processes_in_same_group
-      `ps -eo pid,pgid`.split("\n").slice(1..-1).map  {|s| s.strip.split(/\s+/).map(&:to_i) }.map do |process_info|
-        process_info.first if process_info.last == Process.getpgrp
-      end.compact - [Process.pid, Process.ppid, Process.getpgrp, $?.pid]
+    def count_processes_in_same_group(pgid)
+      open_processes = `ps -eo pgid | grep #{pgid}`
+      open_processes.strip.split(/\s+/).length
     end
 
     private
