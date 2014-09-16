@@ -96,6 +96,13 @@ module BuildStrategy
       else
         "if [ -e .rvmrc ]; then source .rvmrc; elif [ -e .ruby-version ]; then rvm --install --create use $(cat .ruby-version); fi"
       end
+
+      java_options = ""
+
+      if build_kind == "maven" && options['total_workers'] && options['worker_chunk']
+        java_options = " _JAVA_OPTIONS=\"-Dsquare.test.chunkCount=#{options['total_workers']} -Dsquare.test.runChunk=#{options['worker_chunk']}\""
+      end
+
       (
         "env -i HOME=$HOME" +
         " USER=$USER" +
@@ -105,6 +112,7 @@ module BuildStrategy
         " GIT_COMMIT=#{options["git_commit"]}" +
         " GIT_BRANCH=#{options["git_branch"]}" +
         " RUN_LIST=$TARGETS" +
+        java_options +
         " bash --noprofile --norc -c 'source ~/.rvm/scripts/rvm ; #{ruby_command} ; ruby -v ; #{test_command}'"
       ).gsub("$TARGETS", test_files.join(','))
     end
