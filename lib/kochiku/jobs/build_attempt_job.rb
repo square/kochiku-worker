@@ -40,7 +40,7 @@ class BuildAttemptJob < JobBase
   end
 
   def collect_logs(file_glob)
-    detected_files = Dir.glob(*file_glob)
+    detected_files = Dir.glob(file_glob)
     benchmark("collecting logs (#{detected_files.join(', ')}) for BuildAttempt #{@build_attempt_id}") do
       detected_files.each do |path|
         if File.file?(path) && !File.zero?(path)
