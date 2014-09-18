@@ -28,6 +28,21 @@ class BuildAttemptJob < JobBase
     logger.info("Build Attempt #{@build_attempt_id} perform starting")
     return if signal_build_is_starting == :aborted
 
+    unless @test_command
+      begin
+        File.open(BuildStrategy::BuildAllStrategy::LOG_FILE, 'a') do |file|
+          file.write "Error: no test command specified in kochiku.yml"
+        end
+
+        signal_build_is_finished(:failed)
+      ensure
+        collect_logs(Kochiku::Worker.build_strategy.log_files_glob)
+      end
+
+      logger.info("Build Attempt #{@build_attempt_id} has no test_command in kochiku.yml")
+      return
+    end
+
     Kochiku::Worker::GitRepo.inside_copy(@repo_name, @remote_name, @repo_url, @build_ref, @branch) do
       begin
         result = run_tests(@build_kind, @test_files, @test_command, @timeout, @options.merge({"git_commit" => @build_ref, "git_branch" => @branch})) ? :passed : :failed

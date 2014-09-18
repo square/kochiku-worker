@@ -31,6 +31,36 @@ RSpec.describe BuildAttemptJob do
       allow(GitStrategy::LocalCache).to receive(:system).and_return(true)
     end
 
+    context "no test_command specified" do
+      let(:file) { double("file")}
+      let(:build_options_no_test_command) { {
+        "build_attempt_id" => build_attempt_id,
+        "build_ref" => build_ref,
+        "build_kind" => build_part_kind,
+        "test_files" => test_files,
+        "repo_name" => 'local-cache',
+        "remote_name" => "origin",
+        "test_command" => nil,
+        "repo_url" => "git@github.com:square/kochiku-worker.git"
+      } }
+
+      before do
+        allow(File).to receive(:open).and_yield(file)
+        stub_request(:post, "#{master_host}/build_attempts/#{build_attempt_id}/start").to_return(:body => {'build_attempt' => {'state' => 'running'}}.to_json)
+        stub_request(:post, "#{master_host}/build_attempts/#{build_attempt_id}/finish")
+      end
+      it "should fail the build and log error" do
+        allow(file).to receive(:write)
+        expect(file).to receive(:write).with("Error: no test command specified in kochiku.yml")
+
+        the_subject = BuildAttemptJob.new(build_options_no_test_command)
+        allow(the_subject).to receive(:collect_logs)
+        expect(the_subject).to receive(:collect_logs).once
+
+        the_subject.perform
+      end
+    end
+
     context "build_attempt has been aborted" do
       it "should return without running the tests" do
         stub_request(:post, "#{master_host}/build_attempts/#{build_attempt_id}/start").to_return(:body => {'build_attempt' => {'state' => 'aborted'}}.to_json)
