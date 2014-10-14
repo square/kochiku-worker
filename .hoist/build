@@ -16,6 +16,7 @@ mkdir -p  $appdir
 rsync -av --exclude=.git  ./ $appdir/
 
 cd  $appdir
+mkdir -p tmp/build-partition
 bundle install --deployment --without development test
 
 mkdir /artifacts/kochiku-worker
