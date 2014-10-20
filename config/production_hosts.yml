@@ -4,7 +4,7 @@ kochiku_web_protocol: "https"
 
 # Change this if you want to run Redis on a different machine than the build master
 # This needs to be the same as the Redis instance that the Kochiku application uses
-redis_host: "kochiku-a-01.corp.squareup.com"
+redis_host: "kochiku.corp.squareup.com"
 
 # Change this to the hostnames for the kochiku worker boxes that you want to deploy to
 worker_hosts:

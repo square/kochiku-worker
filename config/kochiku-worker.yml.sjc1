@@ -1,4 +1,4 @@
 kochiku_web_server_host: kochiku.corp.squareup.com
 kochiku_web_server_protocol: https
 build_strategy: build_all
-redis_host: kochiku-a-01.corp.squareup.com
+redis_host: kochiku.corp.squareup.com
