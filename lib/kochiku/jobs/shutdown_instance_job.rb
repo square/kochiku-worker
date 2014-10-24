@@ -6,11 +6,11 @@
 class ShutdownInstanceJob < JobBase
   def self.perform
     # Tell the parent Resque process to pause after it finishes processing this
-    # job. It will be exited by monit.
+    # job. It will be exited by runit.
     Process.kill("USR2", Process.ppid)
 
     # Shutdown the instance 1 minute from now. Requires NOPASSWD sudo
-    pid = Process.spawn("sleep 5; sudo monit stop kochiku-worker; sudo shutdown -h +1")
+    pid = Process.spawn("sleep 5; sv stop /home/square/service/kochiku-worker; sudo shutdown -h +1")
     Process.detach(pid)
   end
 end
