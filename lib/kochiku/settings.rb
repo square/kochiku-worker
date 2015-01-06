@@ -15,6 +15,8 @@ module Kochiku
         contents["redis_host"] = user_defined_options["redis_host"] || "localhost"
         contents["git_strategy"] = user_defined_options["git_strategy"] || "localcache"
         contents["git_shared_root"] = user_defined_options["git_shared_root"]
+        contents["aws_access_key"] = user_defined_options["aws_access_key"]
+        contents["aws_secret_key"] = user_defined_options["aws_secret_key"]
 
         validate!(contents)
 

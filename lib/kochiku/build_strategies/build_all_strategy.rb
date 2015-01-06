@@ -103,6 +103,13 @@ module BuildStrategy
         java_options = " _JAVA_OPTIONS=\"-Dsquare.test.chunkCount=#{options['total_workers']} -Dsquare.test.runChunk=#{options['worker_chunk']}\""
       end
 
+      # For now, only provide s3 credentials to java projects
+      s3_credentials = ""
+      if build_kind == "maven"
+        s3_credentials = " AWS_ACCESS_KEY=#{Kochiku::Worker.settings.aws_access_key}" +
+            " AWS_SECRET_KEY=#{Kochiku::Worker.settings.aws_secret_key}"
+      end
+
       (
         "env -i HOME=$HOME" +
         " USER=$USER" +
@@ -113,6 +120,7 @@ module BuildStrategy
         " GIT_BRANCH=#{options["git_branch"]}" +
         " RUN_LIST=$TARGETS" +
         java_options +
+        s3_credentials +
         " bash --noprofile --norc -c 'source ~/.rvm/scripts/rvm ; #{ruby_command} ; ruby -v ; #{test_command}'"
       ).gsub("$TARGETS", test_files.join(','))
     end
