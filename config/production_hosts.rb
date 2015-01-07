@@ -18,6 +18,14 @@ class ConfigAccessor
   def worker_hosts
     @hash['worker_hosts']
   end
+
+  def aws_access_key
+    @hash['aws_access_key']
+  end
+
+  def aws_secret_key
+    @hash['aws_secret_key']
+  end
 end
 
 CONF_FILE = File.expand_path('production_hosts.yml', File.dirname(__FILE__))
