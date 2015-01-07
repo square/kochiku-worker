@@ -21,6 +21,8 @@ namespace :kochiku do
       kochiku_web_server_protocol: #{HostSettings.kochiku_web_protocol}
       build_strategy: build_all
       redis_host: #{HostSettings.redis_host}
+      aws_access_key: #{HostSettings.aws_access_key}
+      aws_secret_key: #{HostSettings.aws_secret_key}
     END
     config_with_sharedcache = config + <<-END.gsub(/^\s*/, '')
       git_strategy: sharedcache
