@@ -32,7 +32,7 @@ module Kochiku
         @logger ||= begin
           default_logger = Logger.new(STDOUT)
           default_logger.formatter = proc do |severity, datetime, progname, msg|
-            "%5s [%s] %d: %s: %s\n" % [severity, datetime.strftime('%H:%M:%S %Y-%m-%d'), $$, progname, msg2str(msg)]
+            "%5s [%s] %d: %s\n" % [severity, datetime.strftime('%H:%M:%S %Y-%m-%d'), $$, msg2str(msg)]
           end
           Cocaine::CommandLine.logger = default_logger
           default_logger
