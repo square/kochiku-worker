@@ -45,7 +45,7 @@ module GitStrategy
           # update submodules. attempt to use references. best-effort.
           submodules = Cocaine::CommandLine.new('git', 'config --get-regexp "^submodule\..*\.url$"', expected_outcodes: [0,1]).run
           submodules.each_line do |submodule|
-            _, path, url = submodule.match(/^submodule\.(.+?)\.url .+?([^\/]+\/[^\/]+\.git)$/).to_a
+            _, path, url = submodule.match(/^submodule\.(.+?)\.url .+?([^\/]+\/[^\/]+(\.git)?)$/).to_a
             shared_repo_dir = File.join(Kochiku::Worker.settings.git_shared_root, url || 'does-not-exist')
 
             if Dir.exists?(shared_repo_dir)
