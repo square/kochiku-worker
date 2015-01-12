@@ -29,11 +29,19 @@ module Kochiku
       end
 
       def logger
-        @logger ||= Logger.new(STDOUT).tap do |logger|
-          logger.formatter = proc do |severity, datetime, progname, msg|
-            "%5s [%s] %d: %s: %s\n" % [severity, datetime.strftime('%H:%M:%S %Y-%m-%d'), $$, progname, msg2str(msg)]
+        @logger ||= begin
+          default_logger = Logger.new(STDOUT)
+          default_logger.formatter = proc do |severity, datetime, progname, msg|
+            "%5s [%s] %d: %s\n" % [severity, datetime.strftime('%H:%M:%S %Y-%m-%d'), $$, msg2str(msg)]
           end
+          Cocaine::CommandLine.logger = default_logger
+          default_logger
         end
+      end
+
+      def logger=(logger)
+        @logger = logger
+        Cocaine::CommandLine.logger = @logger
       end
 
       def msg2str(msg)
@@ -57,5 +65,3 @@ end
 
 Resque.redis = Redis.new(:host => Kochiku::Worker.settings.redis_host)
 Resque.redis.namespace = "resque:kochiku"
-
-Cocaine::CommandLine.logger = Kochiku::Worker.logger
