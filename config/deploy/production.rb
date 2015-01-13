@@ -5,7 +5,7 @@ require "./config/production_hosts"
 role :worker, HostSettings.worker_hosts
 
 role :mac_worker, HostSettings.worker_hosts.select {|name| name.include? 'macbuild' }
-role :ec2_worker, HostSettings.worker_hosts.select {|name| name.include? 'ec2' }
+role :ec2_worker, HostSettings.worker_hosts.select {|name| name.include? '172.27' }
 
 set :deploy_to, '/data/app/kochiku-worker'
 set :repo_url, "ssh://git@git.corp.squareup.com/sq/kochiku-worker.git"
