@@ -10,6 +10,10 @@ require 'kochiku/worker'
 
 Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].each {|f| load f}
 
+Dir.mkdir("log")
+test_logger = Logger.new("log/test.log", 2)
+test_logger.level = Logger::DEBUG
+Kochiku::Worker.logger = test_logger
 
 RSpec.configure do |config|
   config.expose_dsl_globally = false
@@ -36,7 +40,5 @@ RSpec.configure do |config|
     allow(Cocaine::CommandLine).to receive(:new).with('git fetch', anything) { double('git fetch', :run => nil, :exit_status => 0) }
     allow(Cocaine::CommandLine).to receive(:new).with('git submodule update', anything) { double('git submodule update', :run => nil) }
     allow(Cocaine::CommandLine).to receive(:new).with('git rev-list', anything) { double('git rev-list', :run => nil, :exit_status => 0) }
-
-    allow(Kochiku::Worker.logger).to receive(:info)
   end
 end
