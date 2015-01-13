@@ -10,7 +10,7 @@ require 'kochiku/worker'
 
 Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].each {|f| load f}
 
-Dir.mkdir("log")
+FileUtils.mkdir_p("log")
 test_logger = Logger.new("log/test.log", 2)
 test_logger.level = Logger::DEBUG
 Kochiku::Worker.logger = test_logger
