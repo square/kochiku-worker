@@ -1,0 +1,9 @@
+test_command: 'bin/ci'
+
+ruby:
+ - 2.1.5
+
+targets:
+  - type: spec
+    glob: spec/**/*_spec.rb
+    workers: 1

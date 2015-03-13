@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+echo Command: $0 $*
+echo
+echo "Environment:"
+env
+echo
+
+# set -ex: make script verbose and exit on first failed command
+set -ex
+
+RUN_LIST=$(echo $RUN_LIST | tr "," " ")
+
+gem install bundler -v '~> 1.5' --conservative
+bundle check || bundle install
+bundle exec rspec $RUN_LIST
