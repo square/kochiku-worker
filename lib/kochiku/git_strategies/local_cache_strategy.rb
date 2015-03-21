@@ -18,9 +18,9 @@ module GitStrategy
   class LocalCache
     class << self
       # TODO: make this conform to the same api as nfs strategy. don't need cache name, remote name, etc
-      def clone_and_checkout(tmp_dir, cached_repo_name, remote_name, repo_url, sha, branch)
+      def clone_and_checkout(tmp_dir, cached_repo_name, remote_name, repo_url, sha)
         cached_repo_path = File.join(Kochiku::Worker::GitRepo::WORKING_DIR, cached_repo_name)
-        synchronize_cache_repo(cached_repo_path, remote_name, repo_url, sha, branch)
+        synchronize_cache_repo(cached_repo_path, remote_name, repo_url, sha)
 
         # clone local repo (fast!)
         run! "git clone #{cached_repo_path} #{tmp_dir}"
@@ -54,7 +54,7 @@ module GitStrategy
 
       private
 
-      def synchronize_cache_repo(cached_repo_path, remote_name, repo_url, sha, branch)
+      def synchronize_cache_repo(cached_repo_path, remote_name, repo_url, sha)
         if !File.directory?(cached_repo_path)
           clone_repo(repo_url, remote_name, cached_repo_path)
         end
@@ -65,11 +65,7 @@ module GitStrategy
             Cocaine::CommandLine.new("git remote set-url #{remote_name} #{repo_url}").run
           end
 
-          synchronize_with_remote(remote_name, branch)
-
-          # Update the master ref so that scripts may treat master build
-          # differently than branch build
-          synchronize_with_remote(remote_name, 'master') unless branch == 'master'
+          synchronize_with_remote(remote_name)
 
           Cocaine::CommandLine.new("git submodule update", "--init --quiet").run
         end
@@ -85,9 +81,8 @@ module GitStrategy
         Cocaine::CommandLine.new("git clone", "--recursive --origin #{remote_name} #{repo_url} #{cached_repo_path}").run
       end
 
-      def synchronize_with_remote(name, branch = nil)
-        refspec = branch.to_s.empty? ? "" : "+#{branch}"
-        Cocaine::CommandLine.new("git fetch", "--quiet --prune --no-tags #{name} #{refspec}").run
+      def synchronize_with_remote(remote_name)
+        Cocaine::CommandLine.new("git fetch", "--quiet --prune --no-tags #{remote_name}").run
       rescue Cocaine::ExitStatusError => e
         # likely caused by another 'git fetch' that is currently in progress. Wait a few seconds and try again
         tries = (tries || 0) + 1

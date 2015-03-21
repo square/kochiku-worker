@@ -29,7 +29,7 @@ class BuildAttemptJob < JobBase
     logger.info("Build Attempt #{@build_attempt_id} perform starting")
     return if signal_build_is_starting == :aborted
 
-    Kochiku::Worker::GitRepo.inside_copy(@repo_name, @remote_name, @repo_url, @build_ref, @branch) do
+    Kochiku::Worker::GitRepo.inside_copy(@repo_name, @remote_name, @repo_url, @build_ref) do
       begin
         result = run_tests(@build_kind, @test_files, @test_command, @timeout, @options.merge({"git_commit" => @build_ref, "git_branch" => @branch, "kochiku_env" => @kochiku_env})) ? :passed : :failed
         signal_build_is_finished(result)
