@@ -112,6 +112,7 @@ module BuildStrategy
         " GIT_COMMIT=#{options["git_commit"]}" +
         " GIT_BRANCH=#{options["git_branch"]}" +
         " RUN_LIST=$TARGETS" +
+        " KOCHIKU_ENV=#{options["kochiku_env"]}" +
         java_options +
         " bash --noprofile --norc -c 'source ~/.rvm/scripts/rvm ; #{ruby_command} ; ruby -v ; #{test_command}'"
       ).gsub("$TARGETS", test_files.join(','))
