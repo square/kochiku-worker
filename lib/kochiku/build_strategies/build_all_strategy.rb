@@ -3,6 +3,7 @@ module BuildStrategy
     class ErrorFoundInLogError < StandardError; end
 
     LOG_FILE = "log/stdout.log"
+    KILL_TIMEOUT = 10
 
     def execute_build(build_kind, test_files, test_command, timeout, options)
       if options['log_file_globs']
@@ -19,29 +20,41 @@ module BuildStrategy
       success, pid = BuildStrategy.execute_with_timeout(command, timeout, LOG_FILE)
       success
     ensure
-      did_kill = kill_process_group(pid, 15)
+      processes_killed = kill_process_group(pid, 15)
 
-      if did_kill
+      if processes_killed.length > 0
         File.open(LOG_FILE, 'a') do |file|
-          file.write("\n\n******** Process taking too long, Kochiku killing it NOW ************\n")
+          file.write("\n\n******** The following process(es) taking too long, Kochiku killing NOW ************\n")
+          file.write(processes_killed.join("\n"))
         end
       end
 
       check_log_for_errors! unless success
     end
 
+    # returns array of the process commands killed (or empty array if none).
     def kill_process_group(pid, sig = 15)
-      process_timeout = false
+      processes_killed = []
 
       # Kill the head process
       # We cannot kill the process group if head is a zombie process
       begin
-        Timeout.timeout(10) do
+        Timeout.timeout(KILL_TIMEOUT) do
+          ps_entry = `ps p #{pid} -o state,command | tail -n +2`.strip
+
+          unless ps_entry == ""
+            parsed_entry = /(.*?)\s+(.*)/.match(ps_entry)
+            ps_state = parsed_entry[1]
+            ps_command = parsed_entry[2]
+
+            # Don't record zombie processes
+            processes_killed << ps_command unless ps_state =~ /Z/
+          end
+
           Process.kill(sig, pid)
           Process.wait(pid)
         end
       rescue Timeout::Error
-        process_timeout = true
         Process.kill(9, pid)
         Process.wait(pid)
       rescue Errno::ESRCH, Errno::ECHILD # Process has already exited
@@ -49,18 +62,19 @@ module BuildStrategy
 
       # Kill the rest of the process group
       begin
-        Timeout.timeout(10) do
-          if count_processes_in_same_group(pid) == 0
-            return process_timeout
+        Timeout.timeout(KILL_TIMEOUT) do
+          list_processes = processes_in_same_group(pid)
+          if list_processes.empty?
+            return processes_killed
           else
-            process_timeout = true
+            processes_killed += list_processes
           end
 
           # (-sig) sends sig to the entire process group
           Process.kill(-sig, pid)
 
           # wait for all processes in group to exit
-          while count_processes_in_same_group(pid) > 0 do
+          while processes_in_same_group(pid).length > 0 do
             sleep 1
           end
         end
@@ -71,21 +85,16 @@ module BuildStrategy
         kill_process_group(pid, 9)
       rescue Errno::ESRCH, Errno::ECHILD # Process has already exited
       end
-      process_timeout
+
+      processes_killed
     end
 
-    def child_processes
-      descendants = Hash.new{|ht,k| ht[k] = [k] }
-      Hash[*`ps -eo pid,ppid`.scan(/\d+/).map(&:to_i)].each do |pid, ppid|
-        descendants[ppid] << descendants[pid]
-      end
-      ps_pid = $?.pid
-      descendants[Process.pid].flatten - [Process.pid, ps_pid]
-    end
-
-    def count_processes_in_same_group(pgid)
-      open_processes = `ps -eo pgid | grep #{pgid}`
-      open_processes.strip.split(/\s+/).length
+    # returns array of commands for processes in group pgid
+    def processes_in_same_group(pgid)
+      open_processes = `ps -eo pgid,command | tail -n +2`.strip.split("\n").map { |x| x.strip }
+      parsed_processes = open_processes.map { |x| /(.*?)\s+(.*)/.match(x) }.select { |x| x[1].to_i == pgid }
+      commands = parsed_processes.map { |x| x[2] }
+      return commands
     end
 
     private
