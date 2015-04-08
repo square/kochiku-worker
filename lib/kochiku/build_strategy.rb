@@ -26,4 +26,9 @@ module BuildStrategy
 
     return exit_status, pid
   end
+
+  # run before forcibly killing a process or child-process
+  # can be used to get a stack trace, etc.
+  def self.on_terminate_hook(pid, command)
+  end
 end

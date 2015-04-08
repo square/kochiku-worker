@@ -40,15 +40,19 @@ module BuildStrategy
       # We cannot kill the process group if head is a zombie process
       begin
         Timeout.timeout(KILL_TIMEOUT) do
-          ps_entry = `ps p #{pid} -o state,command | tail -n +2`.strip
+          ps_entry = `ps p #{pid} -o pid,state,command | tail -n +2`.strip
 
           unless ps_entry == ""
-            parsed_entry = /(.*?)\s+(.*)/.match(ps_entry)
-            ps_state = parsed_entry[1]
-            ps_command = parsed_entry[2]
+            parsed_entry = /(?<pid>.*?)\s+(?<state>.*?)\s+(?<command>.*)/.match(ps_entry)
+            ps_pid = parsed_entry["pid"].to_i
+            ps_state = parsed_entry["state"]
+            ps_command = parsed_entry["command"]
 
             # Don't record zombie processes
-            processes_killed << ps_command unless ps_state =~ /Z/
+            unless ps_state =~ /Z/
+              BuildStrategy.on_terminate_hook(ps_pid, ps_command)
+              processes_killed << ps_command
+            end
           end
 
           Process.kill(sig, pid)
@@ -67,7 +71,10 @@ module BuildStrategy
           if list_processes.empty?
             return processes_killed
           else
-            processes_killed += list_processes
+            list_processes.each do |process_id, command|
+              BuildStrategy.on_terminate_hook(process_id, command)
+            end
+            processes_killed += list_processes.values
           end
 
           # (-sig) sends sig to the entire process group
@@ -89,12 +96,18 @@ module BuildStrategy
       processes_killed
     end
 
-    # returns array of commands for processes in group pgid
+    # returns hash of pid => command for processes in group pgid
     def processes_in_same_group(pgid)
-      open_processes = `ps -eo pgid,command | tail -n +2`.strip.split("\n").map { |x| x.strip }
-      parsed_processes = open_processes.map { |x| /(.*?)\s+(.*)/.match(x) }.select { |x| x[1].to_i == pgid }
-      commands = parsed_processes.map { |x| x[2] }
-      return commands
+      open_processes = `ps -eo pid,pgid,command | tail -n +2`.strip.split("\n").map { |x| x.strip }
+      parsed_processes = open_processes.map { |x| /(?<pid>.*?)\s+(?<pgid>.*?)\s+(?<command>.*)/.match(x) }
+                                       .select { |x| x["pgid"].to_i == pgid }
+      pid_commands = {}
+
+      parsed_processes.each do |process|
+        pid_commands[process["pid"].to_i] = process["command"]
+      end
+
+      return pid_commands
     end
 
     private
