@@ -3,6 +3,7 @@ module BuildStrategy
     class ErrorFoundInLogError < StandardError; end
 
     LOG_FILE = "log/stdout.log"
+    KILL_TIMEOUT = 10
 
     def execute_build(build_kind, test_files, test_command, timeout, options)
       if options['log_file_globs']
@@ -19,29 +20,45 @@ module BuildStrategy
       success, pid = BuildStrategy.execute_with_timeout(command, timeout, LOG_FILE)
       success
     ensure
-      did_kill = kill_process_group(pid, 15)
+      processes_killed = kill_process_group(pid, 15)
 
-      if did_kill
+      if processes_killed.length > 0
         File.open(LOG_FILE, 'a') do |file|
-          file.write("\n\n******** Process taking too long, Kochiku killing it NOW ************\n")
+          file.write("\n\n******** The following process(es) taking too long, Kochiku killing NOW ************\n")
+          file.write(processes_killed.join("\n"))
         end
       end
 
       check_log_for_errors! unless success
     end
 
+    # returns array of the process commands killed (or empty array if none).
     def kill_process_group(pid, sig = 15)
-      process_timeout = false
+      processes_killed = []
 
       # Kill the head process
       # We cannot kill the process group if head is a zombie process
       begin
-        Timeout.timeout(10) do
+        Timeout.timeout(KILL_TIMEOUT) do
+          ps_entry = `ps p #{pid} -o pid,state,command | tail -n +2`.strip
+
+          unless ps_entry == ""
+            parsed_entry = /(?<pid>.*?)\s+(?<state>.*?)\s+(?<command>.*)/.match(ps_entry)
+            ps_pid = parsed_entry["pid"].to_i
+            ps_state = parsed_entry["state"]
+            ps_command = parsed_entry["command"]
+
+            # Don't record zombie processes
+            unless ps_state =~ /Z/
+              BuildStrategy.on_terminate_hook(ps_pid, ps_command)
+              processes_killed << ps_command
+            end
+          end
+
           Process.kill(sig, pid)
           Process.wait(pid)
         end
       rescue Timeout::Error
-        process_timeout = true
         Process.kill(9, pid)
         Process.wait(pid)
       rescue Errno::ESRCH, Errno::ECHILD # Process has already exited
@@ -49,18 +66,22 @@ module BuildStrategy
 
       # Kill the rest of the process group
       begin
-        Timeout.timeout(10) do
-          if count_processes_in_same_group(pid) == 0
-            return process_timeout
+        Timeout.timeout(KILL_TIMEOUT) do
+          list_processes = processes_in_same_group(pid)
+          if list_processes.empty?
+            return processes_killed
           else
-            process_timeout = true
+            list_processes.each do |process_id, command|
+              BuildStrategy.on_terminate_hook(process_id, command)
+            end
+            processes_killed += list_processes.values
           end
 
           # (-sig) sends sig to the entire process group
           Process.kill(-sig, pid)
 
           # wait for all processes in group to exit
-          while count_processes_in_same_group(pid) > 0 do
+          while processes_in_same_group(pid).length > 0 do
             sleep 1
           end
         end
@@ -71,21 +92,22 @@ module BuildStrategy
         kill_process_group(pid, 9)
       rescue Errno::ESRCH, Errno::ECHILD # Process has already exited
       end
-      process_timeout
+
+      processes_killed
     end
 
-    def child_processes
-      descendants = Hash.new{|ht,k| ht[k] = [k] }
-      Hash[*`ps -eo pid,ppid`.scan(/\d+/).map(&:to_i)].each do |pid, ppid|
-        descendants[ppid] << descendants[pid]
+    # returns hash of pid => command for processes in group pgid
+    def processes_in_same_group(pgid)
+      open_processes = `ps -eo pid,pgid,state,command | tail -n +2`.strip.split("\n").map { |x| x.strip }
+      parsed_processes = open_processes.map { |x| /(?<pid>.*?)\s+(?<pgid>.*?)\s+(?<state>.*?)\s+(?<command>.*)/.match(x) }
+                                       .select { |x| x["pgid"].to_i == pgid && x["state"] !~ /Z/ }
+      pid_commands = {}
+
+      parsed_processes.each do |process|
+        pid_commands[process["pid"].to_i] = process["command"]
       end
-      ps_pid = $?.pid
-      descendants[Process.pid].flatten - [Process.pid, ps_pid]
-    end
 
-    def count_processes_in_same_group(pgid)
-      open_processes = `ps -eo pgid | grep #{pgid}`
-      open_processes.strip.split(/\s+/).length
+      return pid_commands
     end
 
     private

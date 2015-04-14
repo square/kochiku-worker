@@ -10,18 +10,20 @@ RSpec.describe BuildStrategy::BuildAllStrategy do
       @spawned_pid = old_spawn.call(*args)
     end
     File.unlink(BuildStrategy::BuildAllStrategy::LOG_FILE) if File.exists?(BuildStrategy::BuildAllStrategy::LOG_FILE)
+
+    stub_const("BuildStrategy::BuildAllStrategy::KILL_TIMEOUT", 1)
   end
 
   describe "#execute_with_timeout_and_kill" do
     let(:busy_wait) { "while true; do true; done"}
     let(:trap_sigterm) { "trap 'echo SIGTERM blocked' 15"}
     let(:log) { IO.readlines(BuildStrategy::BuildAllStrategy::LOG_FILE) }
+    let(:process_kill_message) { "******** The following process(es) taking too long, Kochiku killing NOW ************\n" }
 
     it "should not claim to have killed when it didn't" do
       subject.execute_with_timeout_and_kill "true", 0.1
 
-      expected = "******** Process taking too long, Kochiku killing it NOW ************\n"
-      expect(log.last).not_to eq(expected)
+      expect(log).not_to include(process_kill_message)
     end
 
     it "should return true if it succeeds" do
@@ -57,8 +59,8 @@ RSpec.describe BuildStrategy::BuildAllStrategy do
               Process.kill(0, @spawned_pid)
             }.to raise_error(Errno::ESRCH)
 
-            expected = "******** Process taking too long, Kochiku killing it NOW ************\n"
-            expect(log.last).to eq(expected)
+            expect(log).to include(process_kill_message)
+            expect(log).to include("sleep 300")
           end
         end
         context "SIGTERM trapped" do
@@ -110,8 +112,8 @@ RSpec.describe BuildStrategy::BuildAllStrategy do
               Process.kill(-15, @spawned_pid)
             }.to raise_error(Errno::ESRCH)
 
-            expected = "******** Process taking too long, Kochiku killing it NOW ************\n"
-            expect(log.last).to eq(expected)
+            expect(log).to include(process_kill_message)
+            expect(log).to include("sleep 100")
           end
         end
 
@@ -144,8 +146,8 @@ RSpec.describe BuildStrategy::BuildAllStrategy do
               Process.kill(-15, @spawned_pid)
             }.to raise_error(Errno::ESRCH)
 
-            expected = "******** Process taking too long, Kochiku killing it NOW ************\n"
-            expect(log.last).to eq(expected)
+            expect(log).to include(process_kill_message)
+            expect(log).to include("sleep 100")
           end
         end
       end
@@ -211,16 +213,6 @@ RSpec.describe BuildStrategy::BuildAllStrategy do
           end
         end
       end
-    end
-  end
-
-  describe "#child_processes" do
-    it "only includes processes still running that are not this process or its parent" do
-      Process.spawn("sleep 3")
-      child_processes = subject.child_processes
-      expect(child_processes).to include(@spawned_pid)
-      expect(child_processes).not_to include(Process.pid)
-      expect(child_processes).not_to include(Process.getpgrp)
     end
   end
 end
