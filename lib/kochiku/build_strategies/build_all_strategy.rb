@@ -98,9 +98,9 @@ module BuildStrategy
 
     # returns hash of pid => command for processes in group pgid
     def processes_in_same_group(pgid)
-      open_processes = `ps -eo pid,pgid,command | tail -n +2`.strip.split("\n").map { |x| x.strip }
-      parsed_processes = open_processes.map { |x| /(?<pid>.*?)\s+(?<pgid>.*?)\s+(?<command>.*)/.match(x) }
-                                       .select { |x| x["pgid"].to_i == pgid }
+      open_processes = `ps -eo pid,pgid,state,command | tail -n +2`.strip.split("\n").map { |x| x.strip }
+      parsed_processes = open_processes.map { |x| /(?<pid>.*?)\s+(?<pgid>.*?)\s+(?<state>.*?)\s+(?<command>.*)/.match(x) }
+                                       .select { |x| x["pgid"].to_i == pgid && x["state"] !~ /Z/ }
       pid_commands = {}
 
       parsed_processes.each do |process|
