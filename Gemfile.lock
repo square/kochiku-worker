@@ -7,7 +7,7 @@ GEM
       minitest (~> 5.1)
       thread_safe (~> 0.3, >= 0.3.4)
       tzinfo (~> 1.1)
-    addressable (2.3.6)
+    addressable (2.3.8)
     capistrano (3.2.1)
       i18n
       rake (>= 10.0.0)
@@ -70,7 +70,7 @@ GEM
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.2.0)
     rspec-support (3.2.2)
-    safe_yaml (1.0.3)
+    safe_yaml (1.0.4)
     sinatra (1.4.5)
       rack (~> 1.4)
       rack-protection (~> 1.4)
@@ -88,7 +88,7 @@ GEM
     unf_ext (0.0.7.1)
     vegas (0.1.11)
       rack (>= 1.0.0)
-    webmock (1.18.0)
+    webmock (1.21.0)
       addressable (>= 2.3.6)
       crack (>= 0.3.2)
 
