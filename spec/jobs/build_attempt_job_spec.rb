@@ -83,7 +83,7 @@ RSpec.describe BuildAttemptJob do
       it "sets the build attempt state to errored" do
         stub_request(:post, "#{master_host}/build_attempts/#{build_attempt_id}/start").to_return(:body => {'build_attempt' => {'state' => 'running'}}.to_json)
         stub_request(:post, "#{master_host}/build_attempts/#{build_attempt_id}/build_artifacts")
-        stub_request(:post, "#{master_host}/build_attempts/#{build_attempt_id}/finish").to_return(:head => :ok)
+        stub_request(:post, "#{master_host}/build_attempts/#{build_attempt_id}/finish")
 
         expect(subject).to receive(:run_tests).and_raise(FakeTestError.new('something went wrong'))
         expect(BuildAttemptJob).to receive(:new).and_return(subject)
@@ -102,7 +102,7 @@ RSpec.describe BuildAttemptJob do
         it "sets the build attempt state to aborted" do
           stub_request(:post, "#{master_host}/build_attempts/#{build_attempt_id}/start").to_return(:body => {'build_attempt' => {'state' => 'running'}}.to_json)
           stub_request(:post, "#{master_host}/build_attempts/#{build_attempt_id}/build_artifacts")
-          stub_request(:post, "#{master_host}/build_attempts/#{build_attempt_id}/finish").to_return(:head => :ok)
+          stub_request(:post, "#{master_host}/build_attempts/#{build_attempt_id}/finish")
 
           expect(subject).to receive(:run_tests).and_raise(Kochiku::Worker::GitRepo::RefNotFoundError.new)
           expect(BuildAttemptJob).to receive(:new).and_return(subject)
