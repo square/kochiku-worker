@@ -12,6 +12,7 @@ RSpec.describe BuildStrategy::BuildAllStrategy do
     File.unlink(BuildStrategy::BuildAllStrategy::LOG_FILE) if File.exists?(BuildStrategy::BuildAllStrategy::LOG_FILE)
 
     stub_const("BuildStrategy::BuildAllStrategy::KILL_TIMEOUT", 1)
+    allow(BuildStrategy).to receive(:take_jstack)
   end
 
   describe "#execute_with_timeout_and_kill" do
