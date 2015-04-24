@@ -3,17 +3,18 @@ module BuildStrategy
     class ErrorFoundInLogError < StandardError; end
 
     LOG_FILE = "log/stdout.log"
+    STACK_TRACES = "log/stack_traces/*.log"
     KILL_TIMEOUT = 10
 
     def execute_build(build_kind, test_files, test_command, timeout, options)
       if options['log_file_globs']
-        @log_files = options['log_file_globs'] << LOG_FILE
+        @log_files = options['log_file_globs'] + [LOG_FILE, STACK_TRACES]
       end
       execute_with_timeout_and_kill(ci_command(build_kind, test_files, test_command, options), timeout)
     end
 
     def log_files_glob
-      @log_files ||= [LOG_FILE]
+      @log_files ||= [LOG_FILE, STACK_TRACES]
     end
 
     def execute_with_timeout_and_kill(command, timeout)
