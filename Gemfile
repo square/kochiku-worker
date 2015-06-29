@@ -6,6 +6,7 @@ gem "resque"
 gem "json"
 
 gem "rest-client", require: false
+gem "retryable", require: false
 gem "cocaine"
 
 group :development do

@@ -29,6 +29,11 @@ RSpec.configure do |config|
 
   config.disable_monkey_patching! # same as what's above
 
+  config.before :suite do
+    # Disable Retryable; enable for individual tests if desired.
+    Retryable.disable
+  end
+
   config.before :each do
     WebMock.disable_net_connect!
 

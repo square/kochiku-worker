@@ -1,5 +1,6 @@
 require 'socket'
 require 'rest-client'
+require 'retryable'
 
 class BuildAttemptJob < JobBase
   def initialize(build_options)
@@ -29,12 +30,14 @@ class BuildAttemptJob < JobBase
     logger.info("Build Attempt #{@build_attempt_id} perform starting")
     return if signal_build_is_starting == :aborted
 
-    Kochiku::Worker::GitRepo.inside_copy(@repo_name, @remote_name, @repo_url, @build_ref) do
-      begin
-        result = run_tests(@build_kind, @test_files, @test_command, @timeout, @options.merge({"git_commit" => @build_ref, "git_branch" => @branch, "kochiku_env" => @kochiku_env})) ? :passed : :failed
-        signal_build_is_finished(result)
-      ensure
-        collect_logs(Kochiku::Worker.build_strategy.log_files_glob)
+    Retryable.retryable(tries: 5, on: Kochiku::Worker::GitRepo::RefNotFoundError, sleep: 12) do   # wait for up to 60 seconds for the sha to be available
+      Kochiku::Worker::GitRepo.inside_copy(@repo_name, @remote_name, @repo_url, @build_ref) do
+        begin
+          result = run_tests(@build_kind, @test_files, @test_command, @timeout, @options.merge({"git_commit" => @build_ref, "git_branch" => @branch, "kochiku_env" => @kochiku_env})) ? :passed : :failed
+          signal_build_is_finished(result)
+        ensure
+          collect_logs(Kochiku::Worker.build_strategy.log_files_glob)
+        end
       end
     end
     logger.info("Build Attempt #{@build_attempt_id} perform finished")
