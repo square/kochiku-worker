@@ -97,15 +97,9 @@ class BuildAttemptJob < JobBase
     Kochiku::Worker.build_strategy.execute_build(build_kind, test_files, test_command, timeout, options)
   end
 
-  def with_http_retries
-    yield
-  rescue Errno::EHOSTUNREACH, RestClient::Exception, SocketError
-    tries = (tries || 0) + 1
-    if tries <= 3
-      sleep(tries**tries)
-      retry
-    else
-      raise
+  def with_http_retries(&block)
+    Retryable.retryable(tries: 4, on: [Errno::EHOSTUNREACH, RestClient::Exception, SocketError], sleep: 5) do
+      block.call
     end
   end
 
