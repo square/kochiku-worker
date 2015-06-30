@@ -26,7 +26,6 @@ module GitStrategy
         run! "git clone #{cached_repo_path} #{tmp_dir}"
 
         Dir.chdir(tmp_dir) do
-          raise Kochiku::Worker::GitRepo::RefNotFoundError.new("Build Ref #{sha} not found in #{repo_url}") unless system("git rev-list --quiet -n1 #{sha}")
           run! "git checkout --quiet #{sha}"
 
           run! "git submodule --quiet init"
@@ -66,6 +65,10 @@ module GitStrategy
           end
 
           synchronize_with_remote(remote_name)
+
+          if !sha.nil? && !system("git rev-list --quiet -n1 #{sha}")
+            raise Kochiku::Worker::GitRepo::RefNotFoundError.new("Build Ref #{sha} not found in #{repo_url}")
+          end
 
           Cocaine::CommandLine.new("git submodule update", "--init --quiet").run
         end
