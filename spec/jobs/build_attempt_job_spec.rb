@@ -157,8 +157,9 @@ RSpec.describe BuildAttemptJob do
     end
 
     it "should be able to retry, even if the IO object has been closed" do
+      Retryable.enable
+      allow(Kernel).to receive(:sleep)
       stub_request(:post, "#{master_host}/build_attempts/#{build_attempt_id}/build_artifacts").to_return(:status => 500, :body => "", :headers => {})
-      allow(subject).to receive(:sleep)
 
       Dir.mktmpdir do |dir|
         Dir.chdir(dir) do
@@ -175,6 +176,8 @@ RSpec.describe BuildAttemptJob do
           expect(WebMock).to have_requested(:post, "#{master_host}/build_attempts/#{build_attempt_id}/build_artifacts").times(4)
         end
       end
+
+      Retryable.disable
     end
   end
 
