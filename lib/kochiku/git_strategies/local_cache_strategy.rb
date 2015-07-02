@@ -26,7 +26,6 @@ module GitStrategy
         run! "git clone #{cached_repo_path} #{tmp_dir}"
 
         Dir.chdir(tmp_dir) do
-          raise Kochiku::Worker::GitRepo::RefNotFoundError.new("Build Ref #{sha} not found in #{repo_url}") unless system("git rev-list --quiet -n1 #{sha}")
           run! "git checkout --quiet #{sha}"
 
           run! "git submodule --quiet init"
@@ -67,6 +66,10 @@ module GitStrategy
 
           synchronize_with_remote(remote_name)
 
+          if !sha.nil? && !system("git rev-list --quiet -n1 #{sha}")
+            raise Kochiku::Worker::GitRepo::RefNotFoundError.new("Build Ref #{sha} not found in #{repo_url}")
+          end
+
           Cocaine::CommandLine.new("git submodule update", "--init --quiet").run
         end
       end
@@ -82,16 +85,13 @@ module GitStrategy
       end
 
       def synchronize_with_remote(remote_name)
-        Cocaine::CommandLine.new("git fetch", "--quiet --prune --no-tags #{remote_name}").run
-      rescue Cocaine::ExitStatusError => e
+        exception_cb = Proc.new do |exception|
+          Kochiku::Worker.logger.warn(exception)
+        end
+
         # likely caused by another 'git fetch' that is currently in progress. Wait a few seconds and try again
-        tries = (tries || 0) + 1
-        if tries < 3
-          Kochiku::Worker.logger.warn(e)
-          sleep(15 * tries)
-          retry
-        else
-          raise e
+        Retryable.retryable(tries: 3, on: Cocaine::ExitStatusError, sleep: lambda { |n| 15*n }, exception_cb: exception_cb) do
+          Cocaine::CommandLine.new("git fetch", "--quiet --prune --no-tags #{remote_name}").run
         end
       end
     end
