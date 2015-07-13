@@ -27,13 +27,21 @@ class BuildAttemptJob < JobBase
   end
 
   def perform
+    logstreamer_port = Kochiku::Worker.settings['logstreamer_port']
+    if logstreamer_port && !launch_logstreamer(logstreamer_port)
+      logger.info("Launch of logstreamer on port #{logstreamer_port} failed.")
+      logstreamer_port = nil
+    end
+
     logger.info("Build Attempt #{@build_attempt_id} perform starting")
-    return if signal_build_is_starting == :aborted
+
+    return if signal_build_is_starting(logstreamer_port) == :aborted
 
     Retryable.retryable(tries: 5, on: Kochiku::Worker::GitRepo::RefNotFoundError, sleep: 12) do   # wait for up to 60 seconds for the sha to be available
       Kochiku::Worker::GitRepo.inside_copy(@repo_name, @remote_name, @repo_url, @build_ref) do
         begin
-          result = run_tests(@build_kind, @test_files, @test_command, @timeout, @options.merge({"git_commit" => @build_ref, "git_branch" => @branch, "kochiku_env" => @kochiku_env})) ? :passed : :failed
+          options = @options.merge("git_commit" => @build_ref, "git_branch" => @branch, "kochiku_env" => @kochiku_env, "logstreamer_enabled" => !!logstreamer_port)
+          result = run_tests(@build_kind, @test_files, @test_command, @timeout, options) ? :passed : :failed
           signal_build_is_finished(result)
         ensure
           collect_logs(Kochiku::Worker.build_strategy.log_files_glob)
@@ -43,13 +51,30 @@ class BuildAttemptJob < JobBase
     logger.info("Build Attempt #{@build_attempt_id} perform finished")
   end
 
+  # attempts to launch logstreamer on specified port. Returns true on success, false otherwise.
+  def launch_logstreamer(port)
+    exception_cb = Proc.new do
+      Dir.chdir("logstreamer") { system("./logstreamer -p #{port} &") }
+    end
+
+    begin
+      Retryable.retryable(sleep: 3, on: [Errno::EHOSTUNREACH, Errno::ECONNREFUSED, RestClient::Exception, SocketError],
+          exception_cb: exception_cb, tries: 2) do
+        RestClient.get("http://localhost:#{port}/_status", :timeout => 5).code == 200
+      end
+      true
+    rescue Errno::EHOSTUNREACH, Errno::ECONNREFUSED, RestClient::Exception, SocketError
+      false
+    end
+  end
+
   def collect_logs(file_glob)
     detected_files = Dir.glob(file_glob)
     benchmark("collecting logs (#{detected_files.join(', ')}) for Build Attempt #{@build_attempt_id}") do
       detected_files.each do |path|
         if File.file?(path) && !File.zero?(path)
           if path =~ /log$/
-            Cocaine::CommandLine.new("gzip", path).run
+            Cocaine::CommandLine.new("gzip", "-f :path").run(path: path) # -f is because we need to break the hardlink
             path += '.gz'
           end
           upload_log_file(File.new(path))
@@ -94,7 +119,7 @@ class BuildAttemptJob < JobBase
 
   def run_tests(build_kind, test_files, test_command, timeout, options)
     logger.info("Running tests for #{@build_attempt_id}")
-    Kochiku::Worker.build_strategy.execute_build(build_kind, test_files, test_command, timeout, options)
+    Kochiku::Worker.build_strategy.execute_build(@build_attempt_id, build_kind, test_files, test_command, timeout, options)
   end
 
   def with_http_retries(&block)
@@ -106,14 +131,17 @@ class BuildAttemptJob < JobBase
     end
   end
 
-  def signal_build_is_starting
+  def signal_build_is_starting(logstreamer_port)
     result = nil
     benchmark("Signal Build Attempt #{@build_attempt_id} starting") do
       build_start_url = "#{url_base}/start"
+      payload = {:builder => hostname}
+      payload[:logstreamer_port] = logstreamer_port if logstreamer_port
+
       with_http_retries do
         result = RestClient::Request.execute(method: :post,
                                              url: build_start_url,
-                                             payload: { builder: hostname },
+                                             payload: payload,
                                              headers: { accept: :json })
       end
     end
