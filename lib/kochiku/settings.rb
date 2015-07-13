@@ -17,6 +17,7 @@ module Kochiku
         contents["git_shared_root"] = user_defined_options["git_shared_root"]
         contents["aws_access_key"] = user_defined_options["aws_access_key"]
         contents["aws_secret_key"] = user_defined_options["aws_secret_key"]
+        contents["logstreamer_port"] = user_defined_options['logstreamer_port']
 
         validate!(contents)
 
@@ -27,6 +28,7 @@ module Kochiku
 
       def validate!(config)
         raise 'git_shared_root required for sharedcache.' if config["git_strategy"] == "sharedcache" && config["git_shared_root"].nil?
+        raise 'logstreamer_port must be valid port number.' if config['logstreamer_port'] && !(config['logstreamer_port'].is_a?(Integer))
       end
 
       def inspect
