@@ -1,3 +1,5 @@
+require 'fileutils'
+
 module BuildStrategy
   class BuildAllStrategy
     class ErrorFoundInLogError < StandardError; end
@@ -6,11 +8,24 @@ module BuildStrategy
     STACK_TRACES = "log/stack_traces/*.log"
     KILL_TIMEOUT = 10
 
-    def execute_build(build_kind, test_files, test_command, timeout, options)
+    def execute_build(build_attempt_id, build_kind, test_files, test_command, timeout, options)
       if options['log_file_globs']
         @log_files = options['log_file_globs'] + [LOG_FILE, STACK_TRACES]
       end
+      @build_attempt_id = build_attempt_id
+      hardlink_log(LOG_FILE)
       execute_with_timeout_and_kill(ci_command(build_kind, test_files, test_command, options), timeout)
+    end
+
+    # log persistence needed for logstreamer
+    def hardlink_log(log)
+      FileUtils.mkdir_p("log")
+      FileUtils.touch(log)
+
+      kochiku_base_dir = File.join(__dir__, "../../..")
+
+      FileUtils.mkdir_p("#{kochiku_base_dir}/logstreamer/logs/#{@build_attempt_id}/")
+      FileUtils.ln(log, "#{kochiku_base_dir}/logstreamer/logs/#{@build_attempt_id}/stdout.log")
     end
 
     def log_files_glob
