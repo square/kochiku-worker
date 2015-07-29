@@ -19,5 +19,5 @@ cd  $appdir
 mkdir -p tmp/build-partition
 bundle install --deployment --without development test
 
-mkdir /artifacts/kochiku-worker
+mkdir -p /artifacts/kochiku-worker
 tar czvf /artifacts/kochiku-worker/kochiku-worker_$sha.tar.gz ./
