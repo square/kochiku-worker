@@ -1,6 +1,6 @@
 contact: px-robots
 rollout_strategy: basic_stateless
-size: small
+size: medium
 git:
   repo: https://stash.corp.squareup.com/scm/sq/kochiku-worker.git
   author:
@@ -9,7 +9,6 @@ git:
 
 owners:
   - rob
-  - jeversmann
   - shenil
   - eckhardt
   - xavier
