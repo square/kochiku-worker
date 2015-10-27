@@ -8,5 +8,5 @@ role :mac_worker, HostSettings.worker_hosts.select {|name| name.include? 'macbui
 role :ec2_worker, HostSettings.worker_hosts.select {|name| name.include? '172.27' }
 
 set :deploy_to, '/data/app/kochiku-worker'
-set :repo_url, "ssh://git@git.corp.squareup.com/sq/kochiku-worker.git"
+set :repo_url, "git://git-mirror.corp.squareup.com/cii/kochiku-worker.git"
 set :user, "square"
