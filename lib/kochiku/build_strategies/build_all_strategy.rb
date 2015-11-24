@@ -152,7 +152,7 @@ module BuildStrategy
         " RUN_LIST=$TARGETS" +
         " KOCHIKU_ENV=#{options["kochiku_env"]}" +
         java_options +
-        " bash --noprofile --norc -c 'if [ -f ~/.rvm/scripts/rvm ]; then source ~/.rvm/scripts/rvm; elif [ -f /usr/local/rvm/scripts/rvm ]; then source /usr/local/rvm/scripts/rvm; fi; #{ruby_command} ; ruby -v ; #{test_command}'"
+        " bash --noprofile --norc -c 'if [ -f /usr/local/rvm/scripts/rvm ]; then source /usr/local/rvm/scripts/rvm; fi; if [ -f /usr/local/nvm/nvm.sh ]; then source /usr/local/nvm/nvm.sh; fi; #{ruby_command} ; ruby -v ; #{test_command}'"
       ).gsub("$TARGETS", test_files.join(','))
     end
 
