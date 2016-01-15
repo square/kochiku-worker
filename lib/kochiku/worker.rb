@@ -63,5 +63,5 @@ module Kochiku
   end
 end
 
-Resque.redis = Redis.new(:host => Kochiku::Worker.settings.redis_host)
+Resque.redis = Redis.new(:host => Kochiku::Worker.settings.redis_host, :port => Kochiku::Worker.settings.redis_port)
 Resque.redis.namespace = "resque:kochiku"

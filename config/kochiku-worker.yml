@@ -2,3 +2,4 @@ kochiku_web_server_host: localhost:3000
 kochiku_web_server_protocol: http
 build_strategy: random
 redis_host: localhost
+redis_port: 6379
