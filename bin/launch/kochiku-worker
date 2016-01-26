@@ -11,9 +11,9 @@ export PATH=/usr/ruby20/bin:$PATH
 
 cd $WORKER_DIR
 
-if [[ -f ./config/kochiku-worker.yml.sjc1 ]];then
+if [[ -f ./config/kochiku-worker.yml.sjc2b ]];then
   cp ./config/kochiku-worker.yml ./config/kochiku-worker.yml.development
-  mv ./config/kochiku-worker.yml.sjc1 ./config/kochiku-worker.yml
+  mv ./config/kochiku-worker.yml.sjc2b ./config/kochiku-worker.yml
 fi
 
 exec setsid /usr/ruby20/bin/bundle exec rake resque:work \

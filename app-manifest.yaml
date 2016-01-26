@@ -1,11 +1,9 @@
-contact: px-robots
+app: kochiku-worker
+contact: ci-infrastructure+robots
 rollout_strategy: basic_stateless
-size: medium
+size: tiny
 git:
   repo: https://stash.corp.squareup.com/scm/cii/kochiku-worker.git
-  author:
-      name: hoist
-      email: hoist@sjc1
 
 owners:
   - rob

@@ -1,0 +1,5 @@
+kochiku_web_server_host: kochiku.global.square
+kochiku_web_server_protocol: https
+build_strategy: build_all
+redis_host: redis-kochiku-rw.global.square
+redis_port: 30938
