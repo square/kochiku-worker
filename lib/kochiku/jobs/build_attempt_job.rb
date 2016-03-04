@@ -108,7 +108,10 @@ class BuildAttemptJob < JobBase
     benchmark("Signal build attempt #{@build_attempt_id} starting") do
       build_start_url = "#{url_base}/start"
       with_http_retries do
-        result = RestClient::Request.execute(:method => :post, :url => build_start_url, :payload => {:builder => hostname}, :headers => {:accept => :json})
+        result = RestClient::Request.execute(method: :post,
+                                             url: build_start_url,
+                                             payload: { builder: hostname },
+                                             headers: { accept: :json })
       end
     end
     JSON.parse(result)["build_attempt"]["state"].to_sym
@@ -118,7 +121,12 @@ class BuildAttemptJob < JobBase
     benchmark("Signal build attempt #{@build_attempt_id} finished") do
       build_finish_url = "#{url_base}/finish"
       with_http_retries do
-        RestClient::Request.execute(:method => :post, :url => build_finish_url, :payload => {:state => result}, :headers => {:accept => :json}, :timeout => 60, :open_timeout => 60)
+        RestClient::Request.execute(method: :post,
+                                    url: build_finish_url,
+                                    payload: { state: result },
+                                    headers: { accept: :json },
+                                    timeout: 60,
+                                    open_timeout: 60)
       end
     end
   end
@@ -127,7 +135,11 @@ class BuildAttemptJob < JobBase
     log_artifact_upload_url = "#{url_base}/build_artifacts"
     with_http_retries do
       file.rewind
-      RestClient::Request.execute(:method => :post, :url => log_artifact_upload_url, :payload => {:build_artifact => {:log_file => file.clone}}, :headers => {:accept => :xml}, :timeout => 60 * 5)
+      RestClient::Request.execute(method: :post,
+                                  url: log_artifact_upload_url,
+                                  payload: { build_artifact: { log_file: file.clone } },
+                                  headers: { accept: :xml },
+                                  timeout: 60 * 5)
     end
   rescue Errno::EHOSTUNREACH, RuntimeError => e
     # log exception and continue. A failed log file upload should not interrupt the BuildAttempt
