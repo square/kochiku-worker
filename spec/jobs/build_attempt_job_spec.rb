@@ -32,6 +32,47 @@ RSpec.describe BuildAttemptJob do
       allow(GitStrategy::LocalCache).to receive(:system).and_return(true)
     end
 
+    context "logstreamer port specified" do
+      before do
+        # directly setting the hash value pollutes the other tests
+        allow(Kochiku::Worker.settings).to receive(:[]).with('logstreamer_port').and_return(10000)
+      end
+
+      context "able to launch logstreamer" do
+        before do
+          allow(subject).to receive(:launch_logstreamer).and_return(true)
+        end
+
+        it "should not specify logstreamer port to kochiku master" do
+          hostname = "i-am-a-compooter"
+          allow(subject).to receive(:run_tests)
+          allow(subject).to receive(:hostname).and_return(hostname)
+          stub_request(:post, "#{master_host}/build_attempts/#{build_attempt_id}/start").to_return(:body => {'build_attempt' => {'state' => 'running'}}.to_json)
+          stub_request(:post, "#{master_host}/build_attempts/#{build_attempt_id}/finish")
+
+          subject.perform
+          expect(WebMock).to have_requested(:post, "#{master_host}/build_attempts/#{build_attempt_id}/start").with(:body => "builder=#{hostname}&logstreamer_port=10000")
+        end
+      end
+
+      context "unable to launch logstreamer" do
+        before do
+          allow(RestClient).to receive(:get).and_raise Errno::ECONNREFUSED
+        end
+
+        it "should not specify logstreamer port to kochiku master" do
+          hostname = "i-am-a-compooter"
+          allow(subject).to receive(:run_tests)
+          allow(subject).to receive(:hostname).and_return(hostname)
+          stub_request(:post, "#{master_host}/build_attempts/#{build_attempt_id}/start").to_return(:body => {'build_attempt' => {'state' => 'running'}}.to_json)
+          stub_request(:post, "#{master_host}/build_attempts/#{build_attempt_id}/finish")
+
+          subject.perform
+          expect(WebMock).to have_requested(:post, "#{master_host}/build_attempts/#{build_attempt_id}/start").with(:body => {"builder"=> hostname})
+        end
+      end
+    end
+
     context "build_attempt has been aborted" do
       it "should return without running the tests" do
         stub_request(:post, "#{master_host}/build_attempts/#{build_attempt_id}/start").to_return(:body => {'build_attempt' => {'state' => 'aborted'}}.to_json)
