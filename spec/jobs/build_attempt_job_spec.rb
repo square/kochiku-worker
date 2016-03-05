@@ -19,6 +19,7 @@ RSpec.describe BuildAttemptJob do
       "test_command" => "script/ci worker",
       "repo_url" => "git@github.com:square/kochiku-worker.git"
   } }
+  let(:retry_count) { 4 }
 
   subject { BuildAttemptJob.new(build_options) }
 
@@ -173,7 +174,7 @@ RSpec.describe BuildAttemptJob do
             subject.collect_logs('**/*.log')
           }.not_to raise_error  # specifically, IOError
 
-          expect(WebMock).to have_requested(:post, "#{master_host}/build_attempts/#{build_attempt_id}/build_artifacts").times(4)
+          expect(WebMock).to have_requested(:post, "#{master_host}/build_attempts/#{build_attempt_id}/build_artifacts").times(retry_count)
         end
       end
 
@@ -182,16 +183,33 @@ RSpec.describe BuildAttemptJob do
   end
 
   describe "#with_http_retries" do
-    before do
-      allow(subject).to receive(:sleep)
-    end
-
     it "should raise after retrying" do
+      allow(Kernel).to receive(:sleep)
+      Retryable.enable
+
       expect {
         subject.send(:with_http_retries) do
           raise Errno::EHOSTUNREACH
         end
       }.to raise_error(Errno::EHOSTUNREACH)
+
+      Retryable.disable
+    end
+
+    it "should sleep an increasing amount of time between retries" do
+      Retryable.enable
+
+      expect(Kernel).to receive(:sleep).with(15).ordered
+      expect(Kernel).to receive(:sleep).with(45).ordered
+      expect(Kernel).to receive(:sleep).with(60).ordered
+
+      expect {
+        subject.send(:with_http_retries) do
+          raise Errno::EHOSTUNREACH
+        end
+      }.to raise_error
+
+      Retryable.disable
     end
   end
 end

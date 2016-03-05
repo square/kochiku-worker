@@ -98,7 +98,10 @@ class BuildAttemptJob < JobBase
   end
 
   def with_http_retries(&block)
-    Retryable.retryable(tries: 4, on: [Errno::EHOSTUNREACH, RestClient::Exception, SocketError], sleep: 5) do
+    # 3 retries; sleep for 15, 45, and 60 seconds between tries
+    backoff_proc = lambda { |n| [15, 45, 60][n] }
+
+    Retryable.retryable(tries: 4, on: [Errno::EHOSTUNREACH, RestClient::Exception, SocketError], sleep: backoff_proc) do
       block.call
     end
   end
