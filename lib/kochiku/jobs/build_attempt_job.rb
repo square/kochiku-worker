@@ -144,7 +144,7 @@ class BuildAttemptJob < JobBase
                                   headers: { accept: :xml },
                                   timeout: 60 * 5)
     end
-  rescue Errno::EHOSTUNREACH, RuntimeError => e
+  rescue Errno::EHOSTUNREACH, RestClient::Exception, RuntimeError => e
     # log exception and continue. A failed log file upload should not interrupt the BuildAttempt
     logger.error("Upload of artifact (#{file.to_s}) failed: #{e.message}")
   ensure
