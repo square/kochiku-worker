@@ -40,7 +40,8 @@ class BuildAttemptJob < JobBase
     Retryable.retryable(tries: 5, on: Kochiku::Worker::GitRepo::RefNotFoundError, sleep: 12) do   # wait for up to 60 seconds for the sha to be available
       Kochiku::Worker::GitRepo.inside_copy(@repo_name, @remote_name, @repo_url, @build_ref) do
         begin
-          result = run_tests(@build_kind, @test_files, @test_command, @timeout, @options.merge({"git_commit" => @build_ref, "git_branch" => @branch, "kochiku_env" => @kochiku_env})) ? :passed : :failed
+          options = @options.merge("git_commit" => @build_ref, "git_branch" => @branch, "kochiku_env" => @kochiku_env, "logstreamer_enabled" => !!logstreamer_port)
+          result = run_tests(@build_kind, @test_files, @test_command, @timeout, options) ? :passed : :failed
           signal_build_is_finished(result)
         ensure
           collect_logs(Kochiku::Worker.build_strategy.log_files_glob)
@@ -69,7 +70,7 @@ class BuildAttemptJob < JobBase
 
   def collect_logs(file_glob)
     detected_files = Dir.glob(file_glob)
-    benchmark("collecting logs (#{detected_files.join(', ')}) for BuildAttempt #{@build_attempt_id}") do
+    benchmark("collecting logs (#{detected_files.join(', ')}) for Build Attempt #{@build_attempt_id}") do
       detected_files.each do |path|
         if File.file?(path) && !File.zero?(path)
           if path =~ /log$/
@@ -89,7 +90,7 @@ class BuildAttemptJob < JobBase
       return
     end
 
-    logger.error("Exception occurred during build (#{@build_attempt_id}):")
+    logger.error("Exception occurred during Build Attempt (#{@build_attempt_id}):")
     logger.error(e)
 
     message = StringIO.new
@@ -122,29 +123,41 @@ class BuildAttemptJob < JobBase
   end
 
   def with_http_retries(&block)
-    Retryable.retryable(tries: 4, on: [Errno::EHOSTUNREACH, RestClient::Exception, SocketError], sleep: 5) do
+    # 3 retries; sleep for 15, 45, and 60 seconds between tries
+    backoff_proc = lambda { |n| [15, 45, 60][n] }
+
+    Retryable.retryable(tries: 4, on: [Errno::EHOSTUNREACH, RestClient::Exception, SocketError], sleep: backoff_proc) do
       block.call
     end
   end
 
   def signal_build_is_starting(logstreamer_port)
     result = nil
-    benchmark("Signal build attempt #{@build_attempt_id} starting") do
+    benchmark("Signal Build Attempt #{@build_attempt_id} starting") do
       build_start_url = "#{url_base}/start"
       payload = {:builder => hostname}
       payload[:logstreamer_port] = logstreamer_port if logstreamer_port
+
       with_http_retries do
-        result = RestClient::Request.execute(:method => :post, :url => build_start_url, :payload => payload, :headers => {:accept => :json})
+        result = RestClient::Request.execute(method: :post,
+                                             url: build_start_url,
+                                             payload: payload,
+                                             headers: { accept: :json })
       end
     end
     JSON.parse(result)["build_attempt"]["state"].to_sym
   end
 
   def signal_build_is_finished(result)
-    benchmark("Signal build attempt #{@build_attempt_id} finished") do
+    benchmark("Signal Build Attempt #{@build_attempt_id} finished") do
       build_finish_url = "#{url_base}/finish"
       with_http_retries do
-        RestClient::Request.execute(:method => :post, :url => build_finish_url, :payload => {:state => result}, :headers => {:accept => :json}, :timeout => 60, :open_timeout => 60)
+        RestClient::Request.execute(method: :post,
+                                    url: build_finish_url,
+                                    payload: { state: result },
+                                    headers: { accept: :json },
+                                    timeout: 60,
+                                    open_timeout: 60)
       end
     end
   end
@@ -153,17 +166,21 @@ class BuildAttemptJob < JobBase
     log_artifact_upload_url = "#{url_base}/build_artifacts"
     with_http_retries do
       file.rewind
-      RestClient::Request.execute(:method => :post, :url => log_artifact_upload_url, :payload => {:build_artifact => {:log_file => file.clone}}, :headers => {:accept => :xml}, :timeout => 60 * 5)
+      RestClient::Request.execute(method: :post,
+                                  url: log_artifact_upload_url,
+                                  payload: { build_artifact: { log_file: file.clone } },
+                                  headers: { accept: :xml },
+                                  timeout: 60 * 5)
     end
-  rescue Errno::EHOSTUNREACH, RuntimeError => e
+  rescue Errno::EHOSTUNREACH, RestClient::Exception, RuntimeError => e
     # log exception and continue. A failed log file upload should not interrupt the BuildAttempt
-    logger.error("Upload of artifact (#{file.to_s}) failed: #{e.message}")
+    logger.error("Upload of artifact (#{file.to_s}) for Build Attempt #{@build_attempt_id} failed: #{e.message}")
   ensure
     file.close
   end
 
   def handle_git_ref_not_found(exception)
-    logger.warn("#{exception.class} during build attempt (#{@build_attempt_id}):")
+    logger.warn("#{exception.class} during Build Attempt (#{@build_attempt_id}):")
     logger.warn(exception.message)
 
     message = StringIO.new
