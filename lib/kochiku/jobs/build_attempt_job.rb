@@ -45,7 +45,7 @@ class BuildAttemptJob < JobBase
 
   def collect_logs(file_glob)
     detected_files = Dir.glob(file_glob)
-    benchmark("collecting logs (#{detected_files.join(', ')}) for BuildAttempt #{@build_attempt_id}") do
+    benchmark("collecting logs (#{detected_files.join(', ')}) for Build Attempt #{@build_attempt_id}") do
       detected_files.each do |path|
         if File.file?(path) && !File.zero?(path)
           if path =~ /log$/
@@ -65,7 +65,7 @@ class BuildAttemptJob < JobBase
       return
     end
 
-    logger.error("Exception occurred during build (#{@build_attempt_id}):")
+    logger.error("Exception occurred during Build Attempt (#{@build_attempt_id}):")
     logger.error(e)
 
     message = StringIO.new
@@ -108,7 +108,7 @@ class BuildAttemptJob < JobBase
 
   def signal_build_is_starting
     result = nil
-    benchmark("Signal build attempt #{@build_attempt_id} starting") do
+    benchmark("Signal Build Attempt #{@build_attempt_id} starting") do
       build_start_url = "#{url_base}/start"
       with_http_retries do
         result = RestClient::Request.execute(method: :post,
@@ -121,7 +121,7 @@ class BuildAttemptJob < JobBase
   end
 
   def signal_build_is_finished(result)
-    benchmark("Signal build attempt #{@build_attempt_id} finished") do
+    benchmark("Signal Build Attempt #{@build_attempt_id} finished") do
       build_finish_url = "#{url_base}/finish"
       with_http_retries do
         RestClient::Request.execute(method: :post,
@@ -146,13 +146,13 @@ class BuildAttemptJob < JobBase
     end
   rescue Errno::EHOSTUNREACH, RestClient::Exception, RuntimeError => e
     # log exception and continue. A failed log file upload should not interrupt the BuildAttempt
-    logger.error("Upload of artifact (#{file.to_s}) failed: #{e.message}")
+    logger.error("Upload of artifact (#{file.to_s}) for Build Attempt #{@build_attempt_id} failed: #{e.message}")
   ensure
     file.close
   end
 
   def handle_git_ref_not_found(exception)
-    logger.warn("#{exception.class} during build attempt (#{@build_attempt_id}):")
+    logger.warn("#{exception.class} during Build Attempt (#{@build_attempt_id}):")
     logger.warn(exception.message)
 
     message = StringIO.new
