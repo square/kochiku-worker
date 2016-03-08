@@ -1,4 +1,4 @@
-source 'https://rubygems.org'
+source 'https://gems.corp.squareup.com'
 
 gem "rake"
 
