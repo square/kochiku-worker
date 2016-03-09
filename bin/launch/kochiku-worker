@@ -1,20 +1,13 @@
 #!/bin/sh
 
-set -e
-set -x
+set -ex
 
-WORKER_DIR=/data/app/kochiku-worker/current
-queues=ci-sjc1,developer-sjc1
+export HOME=/data/app/kochiku-worker
+queues='ci-sjc1,developer-sjc1'
 
-# XXX: todo, stop using system ruby
-export PATH=/usr/ruby20/bin:$PATH
+cd $(dirname $0)/../../
 
-cd $WORKER_DIR
+mkdir -p tmp/build-partition
 
-if [[ -f ./config/kochiku-worker.yml.sjc2b ]];then
-  cp ./config/kochiku-worker.yml ./config/kochiku-worker.yml.development
-  mv ./config/kochiku-worker.yml.sjc2b ./config/kochiku-worker.yml
-fi
-
-exec setsid /usr/ruby20/bin/bundle exec rake resque:work \
-  --trace QUEUES=${queues:-"*"} TERM_CHILD=1 INTERVAL=15 </dev/null
+exec setsid ./ruby/bin/rake resque:work \
+  --trace QUEUES=${queues} TERM_CHILD=1 INTERVAL=15

@@ -1,19 +1,15 @@
+#!/usr/bin/env bash
 set -ex
-sha=$(git rev-parse --verify HEAD)
-appdir=/data/app/kochiku-worker/current
 
-# make sure we have ruby20
-yum -y install ruby20 rubygem20-bundler
+project='kochiku-worker'
 
-export PATH=/usr/ruby20/bin:$PATH
+mv config/kochiku-worker.sjc2b.yml config/kochiku-worker.yml
 
-rm -rf /data
-mkdir -p  $appdir
-rsync -av --exclude=.git  ./ $appdir/
+# download and run hoist-buildpack
+rm -Rf /tmp/buildpack
+git clone git://git-mirror.corp.squareup.com/sq/hoist-buildpacks.git /tmp/buildpack --branch green --depth 1 --quiet
 
-cd  $appdir
-mkdir -p tmp/build-partition
-bundle install --deployment --without development test
+# this should be done by the buildpack
+export PATH=/project/ruby/bin:$PATH
 
-mkdir -p /artifacts/kochiku-worker
-tar czvf /artifacts/kochiku-worker/kochiku-worker_$sha.tar.gz ./
+/tmp/buildpack/bin/hoist-mri $project --bare-ruby --ruby 2.1 --cache-bundle --no-assets --no-mysql-client
