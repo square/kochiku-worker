@@ -1,7 +1,6 @@
 app: kochiku-worker
 contact: ci-infrastructure+robots
 rollout_strategy: basic_stateless
-size: small
 git:
   repo: https://stash.corp.squareup.com/scm/cii/kochiku-worker.git
 

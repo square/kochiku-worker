@@ -3,11 +3,13 @@
 set -ex
 
 export HOME=/data/app/kochiku-worker
-queues='ci-sjc1,developer-sjc1'
 
 cd $(dirname $0)/../../
 
 mkdir -p tmp/build-partition
+
+# Extract the resque queues from the p2 manifest config
+queues=$(./ruby/bin/ruby -ryaml -e '$a=YAML.load_file(ENV["CONFIG_PATH"]); print $a.fetch("resque").fetch("queues")')
 
 exec setsid ./ruby/bin/rake resque:work \
   --trace QUEUES=${queues} TERM_CHILD=1 INTERVAL=15
