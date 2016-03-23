@@ -3,6 +3,7 @@
 echo Command: $0 $*
 echo
 echo "Environment:"
+hostname
 env
 echo
 

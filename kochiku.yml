@@ -1,4 +1,4 @@
-test_command: 'bin/ci'
+test_command: 'script/ci'
 
 ruby:
  - 2.1.5
