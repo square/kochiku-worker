@@ -139,7 +139,7 @@ module BuildStrategy
 
       java_options = ""
 
-      if build_kind == "maven" && options['total_workers'] && options['worker_chunk']
+      if options['total_workers'] && options['worker_chunk']
         java_options = " _JAVA_OPTIONS=\"-Dsquare.test.chunkCount=#{options['total_workers']} -Dsquare.test.runChunk=#{options['worker_chunk']}\""
       end
 
