@@ -1,0 +1,18 @@
+namespace :deploy do
+
+  desc 'Build Log Streamer Go files'
+  task :build_log_streamer do
+    on roles(:all) do
+      commands = [
+        "cd #{release_path}/logstreamer",
+        "export GOPATH=$(pwd)",
+        "go get github.com/julienschmidt/httprouter",
+        "go get github.com/stretchr/testify/assert",
+        "make"
+      ]
+      execute commands.join(' && ')
+    end
+  end
+
+  before :publishing, :build_log_streamer
+end
