@@ -12,4 +12,4 @@ git clone git://git-mirror.corp.squareup.com/sq/hoist-buildpacks.git /tmp/buildp
 # this should be done by the buildpack
 export PATH=/project/ruby/bin:$PATH
 
-/tmp/buildpack/bin/hoist-mri $project --bare-ruby --ruby 2.1 --cache-bundle --no-assets --no-mysql-client
+/tmp/buildpack/bin/hoist-mri $project --bare-ruby --ruby 2.1 --cache-bundle --no-assets --no-mysql-client --stunnel
