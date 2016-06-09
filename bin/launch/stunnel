@@ -1,0 +1,4 @@
+#!/bin/bash
+echo -n "Starting kochiku-worker stunnel-client: "
+cd $POD_HOME/kochiku-worker/current
+exec bin/stunnel config/stunnel-redis-${ENVIRONMENT}.conf

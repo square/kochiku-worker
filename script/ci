@@ -13,5 +13,9 @@ set -ex
 RUN_LIST=$(echo $RUN_LIST | tr "," " ")
 
 gem install bundler -v '~> 1.5' --conservative
-bundle check || bundle install
+if [[ -n $KOCHIKU_ENV ]]; then
+    bundle_install_from_shared_cache kochiku-worker
+else
+    bundle check || bundle install
+fi
 bundle exec rspec $RUN_LIST

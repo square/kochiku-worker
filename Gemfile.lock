@@ -1,5 +1,5 @@
 GEM
-  remote: https://gems.corp.squareup.com/
+  remote: https://gems.vip.global.square/
   specs:
     activesupport (4.2.5.1)
       i18n (~> 0.7)
@@ -110,4 +110,4 @@ DEPENDENCIES
   webmock
 
 BUNDLED WITH
-   1.11.2
+   1.12.5
