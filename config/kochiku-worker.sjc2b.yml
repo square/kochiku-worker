@@ -2,4 +2,4 @@ kochiku_web_server_host: kochiku.global.square
 kochiku_web_server_protocol: https
 build_strategy: build_all
 redis_host: localhost
-redis_port: 30938
+redis_port: 31322
