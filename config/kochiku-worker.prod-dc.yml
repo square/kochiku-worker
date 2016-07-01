@@ -3,3 +3,4 @@ kochiku_web_server_protocol: https
 build_strategy: build_all
 redis_host: localhost
 redis_port: 31322
+logstreamer_port: 20123
