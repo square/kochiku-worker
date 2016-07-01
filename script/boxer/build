@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -ex
 
+pwd
+
 project='kochiku-worker'
 
 mv config/kochiku-worker.prod-dc.yml config/kochiku-worker.yml
