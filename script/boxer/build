@@ -3,7 +3,7 @@ set -ex
 
 project='kochiku-worker'
 
-mv config/kochiku-worker.sjc2b.yml config/kochiku-worker.yml
+mv config/kochiku-worker.prod-dc.yml config/kochiku-worker.yml
 
 # download and run hoist-buildpack
 rm -Rf /tmp/buildpack
