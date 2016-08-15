@@ -2,5 +2,11 @@
 set -ex
 
 logstreamer_sha='7b617a0368eab8267fb14e9c5488db8921da4d21'
-cd /project/logstreamer
+pushd /project/logstreamer
 curl -LsS https://hoistrepo-api.vip/download/user-submitted-artifacts/logstreamer/logstreamer_${logstreamer_sha}.tar.gz | tar -zxf -
+popd
+
+# Set the version of git you want here, based on git-partial project sha
+# https://stash.corp.squareup.com/projects/CII/repos/git-partial/browse
+git_partial_sha=b2826b95287238e2bd5bbfd0c707a1d5c6489eaf
+curl -LsS https://hoistrepo-api.vip/download/partial-artifact/git-partial/git-partial_${git_partial_sha}.tar.gz | tar -zx
