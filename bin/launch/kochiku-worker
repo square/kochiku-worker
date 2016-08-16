@@ -6,6 +6,9 @@ export HOME=/data/app/kochiku-worker
 
 cd $(dirname $0)/../../
 
+# add git executable to the path
+export PATH=$(pwd)/bin:$PATH
+
 mkdir -p tmp/build-partition
 
 # Extract the resque queues from the p2 manifest config
