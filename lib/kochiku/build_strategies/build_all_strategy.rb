@@ -146,6 +146,9 @@ module BuildStrategy
       (
         "env -i HOME=$HOME" +
         " USER=$USER" +
+        " LANG=en_US.UTF-8" +
+        " LANGUAGE=en_US.UTF-8" +
+        " LC_ALL=en_US.UTF-8" +
         " PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin:/usr/X11/bin:$M2" +
         " DISPLAY=localhost:1.0" +
         " TEST_RUNNER=#{build_kind}" +
