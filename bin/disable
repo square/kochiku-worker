@@ -4,12 +4,14 @@ set -e
 # Tell all the Resque workers to stop processing requests
 resque_pid=$(pgrep -n -f 'resque-[0-9]\.[0-9]+\.[0-9]+' -u kochiku-worker)
 
-kill -USR2 $resque_pid
+if [ -n $resque1_pid ]; then
+  kill -USR2 $resque_pid
 
-# h: no header
-# x: expand the process line
-# --quick-pid: only return info for specified pid
-until ps xh --quick-pid $resque_pid | grep -q Paused; do
-  sleep 3
-  echo "Waiting for Resque process to pause..."
-done
+  # h: no header
+  # x: expand the process line
+  # --quick-pid: only return info for specified pid
+  until ps xh --quick-pid $resque_pid | grep -q Paused; do
+    sleep 3
+    echo "Waiting for Resque process to pause..."
+  done
+fi
