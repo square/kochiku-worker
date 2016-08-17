@@ -2,7 +2,7 @@
 set -e
 
 # Tell all the Resque workers to stop processing requests
-resque_pid=$(pgrep -n -f 'resque-[0-9]\.[0-9]+\.[0-9]+' -u kochiku-worker)
+resque_pid=$(pgrep --oldest -f 'resque-[0-9]\.[0-9]+\.[0-9]+' -u kochiku-worker)
 
 if [ -n $resque1_pid ]; then
   kill -USR2 $resque_pid
