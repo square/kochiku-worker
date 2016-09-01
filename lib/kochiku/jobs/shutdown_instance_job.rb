@@ -10,7 +10,7 @@ class ShutdownInstanceJob < JobBase
     Process.kill("USR2", Process.ppid)
 
     # Shutdown the instance 1 minute from now. Requires NOPASSWD sudo
-    pid = Process.spawn("sleep 5; sv stop /home/square/service/kochiku-worker; sudo shutdown -h +1")
+    pid = Process.spawn("sleep 5; sv stop /data/app/kochiku-worker/service/kochiku-worker; sudo shutdown -h +1")
     Process.detach(pid)
   end
 end
