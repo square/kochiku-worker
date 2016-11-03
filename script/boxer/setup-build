@@ -1,0 +1,6 @@
+#!/bin/bash -ex
+OUTPUT=/tmp/setup-build
+
+curl -f -o $OUTPUT 'https://stash.corp.squareup.com/projects/SQ/repos/hoist-buildpacks/browse/files/mri/setup-build.source?at=green&raw'
+chmod 755 $OUTPUT
+exec $OUTPUT
