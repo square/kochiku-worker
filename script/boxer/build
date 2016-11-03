@@ -10,8 +10,4 @@ mv config/kochiku-worker.prod-dc.yml config/kochiku-worker.yml
 # download and run hoist-buildpack
 rm -Rf /tmp/buildpack
 git clone git://git-mirror.corp.squareup.com/sq/hoist-buildpacks.git /tmp/buildpack --branch green --depth 1 --quiet
-
-# this should be done by the buildpack
-export PATH=/project/ruby/bin:$PATH
-
 /tmp/buildpack/bin/hoist-mri $project --bare-ruby --ruby 2.1 --cache-bundle --no-assets --no-mysql-client --stunnel
