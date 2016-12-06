@@ -1,6 +1,6 @@
 # Only add this to the Square fork
 require 'capistrano/rvm'
 set :rvm_type, :user
-set :rvm_ruby_version, 'ruby-2.1.1'
+set :rvm_ruby_version, 'ruby-2.3.1'
 
 # vi: filetype=ruby
