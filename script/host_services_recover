@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+# fix hostname
+SQUARE_NS=192.168.18.193
+
+ip_address=$(hostname -I)
+fqdn=$(dig @${SQUARE_NS} +short -x $ip_address)    # this should work now without the explicit NS
+fqdn=${fqdn%.}    # remove trailing period
+hostname=${fqdn%.squareup.com}    # strip off squareup.com domain
+sudo hostname ${hostname}
+sudo domainname ec2.squareup.com
+
+# restart redis(redis server is usually down when hostname is wrong for some reason)
+sudo service redis start
