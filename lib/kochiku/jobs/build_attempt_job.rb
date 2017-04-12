@@ -126,7 +126,7 @@ class BuildAttemptJob < JobBase
     # 3 retries; sleep for 15, 45, and 60 seconds between tries
     backoff_proc = lambda { |n| [15, 45, 60][n] }
 
-    Retryable.retryable(tries: 4, on: [Errno::EHOSTUNREACH, RestClient::Exception, SocketError], sleep: backoff_proc) do
+    Retryable.retryable(tries: 4, on: [Errno::ECONNRESET, Errno::EHOSTUNREACH, RestClient::Exception, SocketError], sleep: backoff_proc) do
       block.call
     end
   end
@@ -172,7 +172,7 @@ class BuildAttemptJob < JobBase
                                   headers: { accept: :xml },
                                   timeout: 60 * 5)
     end
-  rescue Errno::EHOSTUNREACH, RestClient::Exception, RuntimeError => e
+  rescue Errno::ECONNRESET, Errno::EHOSTUNREACH, RestClient::Exception, RuntimeError => e
     # log exception and continue. A failed log file upload should not interrupt the BuildAttempt
     logger.error("Upload of artifact (#{file.to_s}) for Build Attempt #{@build_attempt_id} failed: #{e.message}")
   ensure
