@@ -8,5 +8,5 @@ popd
 
 # Set the version of git you want here, based on git-partial project sha
 # https://stash.corp.squareup.com/projects/CII/repos/git-partial/browse
-git_partial_sha=b2826b95287238e2bd5bbfd0c707a1d5c6489eaf
+git_partial_sha=6c6b64ab8baef766e148e1f0e7130bc34679ca23
 curl -LsS https://hoistrepo-api.vip/download/partial-artifact/git-partial/git-partial_${git_partial_sha}.tar.gz | tar -zx
