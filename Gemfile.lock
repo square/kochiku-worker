@@ -32,6 +32,7 @@ GEM
       domain_name (~> 0.5)
     i18n (0.7.0)
     json (1.8.3)
+    memfs (1.0.0)
     mime-types (2.4.3)
     minitest (5.8.4)
     mono_logger (1.1.0)
@@ -102,6 +103,7 @@ DEPENDENCIES
   capistrano-rvm
   cocaine
   json
+  memfs
   rake
   resque
   rest-client
@@ -110,4 +112,4 @@ DEPENDENCIES
   webmock
 
 BUNDLED WITH
-   1.11.2
+   1.14.6
