@@ -134,8 +134,10 @@ RSpec.describe BuildAttemptJob do
         expect { BuildAttemptJob.perform(build_options) }.to raise_error(FakeTestError)
 
         expect(WebMock).to have_requested(:post, "#{master_host}/build_attempts/#{build_attempt_id}/build_artifacts").with(
-          :headers => {'Content-Type' => /multipart\/form-data/},
-          :body => /something went wrong/
+          :headers => {'Content-Type' => /multipart\/form-data/}
+          # current version of Webmock does not support matching body for multipart/form-data requests
+          # https://github.com/bblimke/webmock/issues/623
+          #:body => /something went wrong/
         )
         expect(WebMock).to have_requested(:post, "#{master_host}/build_attempts/#{build_attempt_id}/finish").with(:body => {"state" => "errored"})
       end
