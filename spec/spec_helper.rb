@@ -5,6 +5,7 @@ require 'bundler/setup'
 
 require 'rspec'
 require 'webmock/rspec'
+require 'memfs'
 
 require 'kochiku/worker'
 
