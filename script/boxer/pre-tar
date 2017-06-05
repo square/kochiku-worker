@@ -10,3 +10,9 @@ popd
 # https://stash.corp.squareup.com/projects/CII/repos/git-partial/browse
 git_partial_sha=6c6b64ab8baef766e148e1f0e7130bc34679ca23
 curl -LsS https://hoistrepo-api.vip/download/partial-artifact/git-partial/git-partial_${git_partial_sha}.tar.gz | tar -zx
+
+# Copy in the Java JDK for Android
+# unpacks into java/jdk${java_version}
+java_version='1.8.0_121'
+curl -LsS https://hoistrepo-api.vip/download/build-artifact/jdk-${java_version}.tar.gz \
+    | tar --strip-components=2 -zxf - ./usr/java/
