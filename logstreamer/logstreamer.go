@@ -12,6 +12,7 @@ import (
 	"strconv"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/kardianos/osext"
 )
 
 func status(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
@@ -50,8 +51,13 @@ func outputLog(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 			maxBytesInt = 50000 // arbitrary default limit
 		}
 
+		folderPath, err := osext.ExecutableFolder()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
 		// check for existence of file; if DNE return 404
-		file, err := os.Open("logs/" + idString + "/" + logName)
+		file, err := os.Open(folderPath + "/logs/" + idString + "/" + logName)
 
 		if err != nil {
 			w.WriteHeader(http.StatusNotFound)
