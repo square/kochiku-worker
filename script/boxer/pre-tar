@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -ex
 
-logstreamer_sha='3c56074dfa0d76fb07cf09a50b13ff566d376a1f'
+logstreamer_sha='dacdf4bfd63221e6af0abcf9e5e9d8fb0b32bf5d'
 pushd /project/logstreamer
 curl -LsS https://hoistrepo-api.vip/download/user-submitted-artifacts/logstreamer/logstreamer_${logstreamer_sha}.tar.gz | tar -zxf -
 popd
