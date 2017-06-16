@@ -27,6 +27,10 @@ class BuildAttemptJob < JobBase
   end
 
   def perform
+    redis_client = Kochiku::Worker.redis_client
+    redis_key = "kochiku_worker:#{hostname}:build_attempt"
+    redis_client.set(redis_key, @build_attempt_id, ex: 60 * 60)
+
     logstreamer_port = Kochiku::Worker.settings['logstreamer_port']
     if logstreamer_port && !launch_logstreamer(logstreamer_port)
       logger.info("Launch of logstreamer on port #{logstreamer_port} failed.")
@@ -43,6 +47,7 @@ class BuildAttemptJob < JobBase
           options = @options.merge("git_commit" => @build_ref, "git_branch" => @branch, "kochiku_env" => @kochiku_env, "logstreamer_enabled" => !!logstreamer_port)
           result = run_tests(@build_kind, @test_files, @test_command, @timeout, options) ? :passed : :failed
           signal_build_is_finished(result)
+          redis_client.del(redis_key)
         ensure
           collect_logs(Kochiku::Worker.build_strategy.log_files_glob)
         end
