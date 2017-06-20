@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+resque1_pid=$(cat /data/app/kochiku-worker/shared/pids/resque1.pid)
+
+if [ -n "$resque1_pid" ] && ps -p $resque1_pid; then
+  kill -USR1 $resque1_pid
+else
+  echo "no resque pid $resque1_pid was found"
+fi
