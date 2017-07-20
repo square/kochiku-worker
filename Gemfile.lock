@@ -50,7 +50,7 @@ GEM
     rack-protection (1.5.3)
       rack
     rake (10.3.2)
-    redis (3.1.0)
+    redis (3.3.3)
     redis-namespace (1.5.0)
       redis (~> 3.0, >= 3.0.4)
     resque (1.25.2)
@@ -118,4 +118,4 @@ DEPENDENCIES
   webmock
 
 BUNDLED WITH
-   1.14.6
+   1.15.2
