@@ -6,7 +6,7 @@ module Kochiku
     class Settings < OpenStruct
       def initialize(root_dir)
         config_file = File.join(root_dir, "config/kochiku-worker.yml")
-        user_defined_options = (File.exist?(config_file) && yaml = YAML.load_file(config_file)) ? yaml : {}
+        user_defined_options = load_config(config_file) || {}
 
         contents = {}
         contents["kochiku_web_server_host"] = user_defined_options["kochiku_web_server_host"] || "localhost"
@@ -34,6 +34,15 @@ module Kochiku
 
       def inspect
         self.class.name + ":\n" + @keys.map{|k|"  #{k.ljust(20)} = #{send(k.to_sym)}"}.join("\n") + "\n"
+      end
+
+      private
+
+      def load_config(config_file)
+        if File.exist?(config_file)
+          config_yaml = ERB.new(File.read(config_file)).result
+          YAML.load(config_yaml)
+        end
       end
     end
   end
