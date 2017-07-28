@@ -14,5 +14,5 @@ mkdir -p tmp/build-partition
 # Extract the resque queues from the p2 manifest config
 queues=$(./ruby/bin/ruby -ryaml -e '$a=YAML.load_file(ENV["CONFIG_PATH"]); print $a.fetch("resque").fetch("queues")')
 
-exec ./bundle/ruby/2.3.0/bin/rake resque:work \
+exec ./bundle/ruby/2.4.0/bin/rake resque:work \
   --trace QUEUES=${queues} TERM_CHILD=1 INTERVAL=15
