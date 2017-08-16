@@ -25,6 +25,7 @@ RSpec.describe BuildAttemptJob do
 
   before do
     FileUtils.mkdir_p(File.join(File.dirname(__FILE__), "..", "..", "tmp", "build-partition", "local-cache"))
+    allow_any_instance_of(BuildAttemptJob).to receive(:clean_orphan_processes)
   end
 
   describe "#perform" do
