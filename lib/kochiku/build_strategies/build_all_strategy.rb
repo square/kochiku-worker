@@ -24,8 +24,6 @@ module BuildStrategy
       FileUtils.mkdir_p("log")
       FileUtils.touch(log)
 
-      kochiku_base_dir = File.join(__dir__, "../../..")
-
       FileUtils.mkdir_p("#{kochiku_base_dir}/logstreamer/logs/#{@build_attempt_id}/")
       FileUtils.ln(log, "#{kochiku_base_dir}/logstreamer/logs/#{@build_attempt_id}/stdout.log")
     end
@@ -47,7 +45,15 @@ module BuildStrategy
         end
       end
 
+      clean_orphan_processes
       check_log_for_errors! unless success
+    end
+
+    def clean_orphan_processes
+      clean_script = "#{kochiku_base_dir}/bin/clean_orphan"
+      Bundler.with_clean_env do
+        Process.spawn(clean_script, out: [LOG_FILE, "a"], err: [:child, :out], pgroup: true)
+      end
     end
 
     # returns array of the process commands killed (or empty array if none).
@@ -129,6 +135,10 @@ module BuildStrategy
     end
 
     private
+
+    def kochiku_base_dir
+      File.join(__dir__, "../../..")
+    end
 
     def ci_command(build_kind, test_files, test_command, options)
       ruby_command = if options["ruby"]
