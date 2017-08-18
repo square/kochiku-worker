@@ -13,7 +13,6 @@ RSpec.describe BuildStrategy::BuildAllStrategy do
 
     stub_const("BuildStrategy::BuildAllStrategy::KILL_TIMEOUT", 1)
     allow(BuildStrategy).to receive(:take_jstack)
-    allow_any_instance_of(BuildStrategy::BuildAllStrategy).to receive(:clean_orphan_processes)
   end
 
   describe "#execute_with_timeout_and_kill" do

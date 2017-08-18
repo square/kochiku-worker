@@ -1,28 +1,8 @@
 #!/usr/bin/env bash
 
-list_descendants() {
-  local children=$(ps -o pid= --ppid "$1")
-
-  for pid in $children
-  do
-    list_descendants "$pid"
-  done
-
-  echo "$children"
-}
-
 resque1_pid=$(cat /data/app/kochiku-worker/shared/pids/resque1.pid)
-current_script=$(readlink -f "$0")
-current_script_path=$(dirname "$current_script")
-clean_script="$current_script_path/clean_orphan"
-
-$clean_script
 
 if [ -n "$resque1_pid" ] && ps -p $resque1_pid; then
-  descendants=$(list_descendants $resque1_pid)
-  if [ -n "$descendants" ]; then
-    kill $descendants
-  fi
   kill -USR1 $resque1_pid
 else
   echo "no resque pid $resque1_pid was found"
