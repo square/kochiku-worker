@@ -53,8 +53,6 @@ class BuildAttemptJob < JobBase
         end
       end
     end
-    logger.info("Clean up build environment")
-    clean_orphan_processes
     logger.info("Build Attempt #{@build_attempt_id} perform finished")
   end
 
@@ -127,21 +125,6 @@ class BuildAttemptJob < JobBase
   def run_tests(build_kind, test_files, test_command, timeout, options)
     logger.info("Running tests for #{@build_attempt_id}")
     Kochiku::Worker.build_strategy.execute_build(@build_attempt_id, build_kind, test_files, test_command, timeout, options)
-  end
-
-  def clean_orphan_processes
-    clean_script = "#{worker_base_dir}/bin/clean_orphan"
-    Bundler.with_clean_env do
-      Process.spawn(clean_script, out: [log_file, "a"], err: [:child, :out], pgroup: true)
-    end
-  end
-
-  def log_file
-    'log/stdout.log'
-  end
-
-  def worker_base_dir
-    File.join(__dir__, "../../..")
   end
 
   def with_http_retries(&block)

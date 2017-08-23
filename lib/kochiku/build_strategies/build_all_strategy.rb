@@ -24,6 +24,8 @@ module BuildStrategy
       FileUtils.mkdir_p("log")
       FileUtils.touch(log)
 
+      kochiku_base_dir = File.join(__dir__, "../../..")
+
       FileUtils.mkdir_p("#{kochiku_base_dir}/logstreamer/logs/#{@build_attempt_id}/")
       FileUtils.ln(log, "#{kochiku_base_dir}/logstreamer/logs/#{@build_attempt_id}/stdout.log")
     end
@@ -127,10 +129,6 @@ module BuildStrategy
     end
 
     private
-
-    def kochiku_base_dir
-      File.join(__dir__, "../../..")
-    end
 
     def ci_command(build_kind, test_files, test_command, options)
       ruby_command = if options["ruby"]
