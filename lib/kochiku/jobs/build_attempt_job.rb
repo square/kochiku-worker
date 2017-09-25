@@ -141,7 +141,7 @@ class BuildAttemptJob < JobBase
   end
 
   def worker_base_dir
-    File.join(__dir__, "../../..")
+    '/data/app/kochiku-worker/current'
   end
 
   def with_http_retries(&block)
