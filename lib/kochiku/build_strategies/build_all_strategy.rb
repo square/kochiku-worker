@@ -129,7 +129,7 @@ module BuildStrategy
     private
 
     def kochiku_base_dir
-      File.join(__dir__, "../../..")
+      '/data/app/kochiku-worker/current'
     end
 
     def ci_command(build_kind, test_files, test_command, options)
