@@ -34,7 +34,10 @@ module GitStrategy
         repo_checkout_path = File.join(Kochiku::Worker::GitRepo::WORKING_DIR, cached_repo_name)
 
         if Dir.exist?(repo_checkout_path)
-          Cocaine::CommandLine.new('git', 'fetch --quiet').run
+          # only perform a git fetch if the local clone does not have the commit
+          unless system("git rev-list --quiet -n1 #{commit}")
+            Cocaine::CommandLine.new('git', 'fetch --quiet').run
+          end
         else
           Cocaine::CommandLine.new('git', 'clone --quiet --shared --no-checkout :repo :dir').run(repo: shared_repo_dir, dir: repo_checkout_path)
         end
