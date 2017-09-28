@@ -18,7 +18,9 @@ module GitStrategy
   class LocalCache
     class << self
       # TODO: make this conform to the same api as nfs strategy. don't need cache name, remote name, etc
-      def clone_and_checkout(tmp_dir, cached_repo_name, remote_name, repo_url, sha)
+      def clone_and_checkout(cached_repo_name, remote_name, repo_url, sha)
+        tmp_dir = Dir.mktmpdir(nil, Kochiku::Worker::GitRepo::WORKING_DIR)
+
         cached_repo_path = File.join(Kochiku::Worker::GitRepo::WORKING_DIR, cached_repo_name)
         synchronize_cache_repo(cached_repo_path, remote_name, repo_url, sha)
 
@@ -49,6 +51,8 @@ module GitStrategy
             run! "git submodule --quiet update"
           end
         end
+
+        tmp_dir
       end
 
       private
