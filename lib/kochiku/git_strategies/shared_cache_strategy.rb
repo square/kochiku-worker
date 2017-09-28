@@ -43,6 +43,7 @@ module GitStrategy
         end
 
         Dir.chdir(repo_checkout_path) do
+          Cocaine::CommandLine.new('git', 'reset --hard').run
           Cocaine::CommandLine.new('git', 'clean -dfx').run
           Cocaine::CommandLine.new('git', 'checkout --quiet :commit').run(commit: commit)
 
