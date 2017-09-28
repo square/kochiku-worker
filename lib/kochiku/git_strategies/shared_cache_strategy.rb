@@ -15,12 +15,11 @@ module GitStrategy
   #
   # Possible improvements:
   # 1. Add multiple shared roots and choose randomly between them. Poor man's client side load balancing.
-  # 2. For repos that are very large when checked out, a git clean -dfx and git checkout instead of a new
-  #    tmpdir would reduce disk i/o for a noticeable improvement.
   class SharedCache
     class << self
-      def clone_and_checkout(tmp_dir, repo_url, commit)
-        shared_repo_dir = File.join(Kochiku::Worker.settings.git_shared_root, repo_url.match(/.+?([^\/]+\/[^\/]+\.git)/)[1])
+      def clone_and_checkout(cached_repo_name, repo_url, commit)
+        repo_namespace_and_name = repo_url.match(/.+?([^\/]+\/[^\/]+\.git)/)[1]
+        shared_repo_dir = File.join(Kochiku::Worker.settings.git_shared_root, repo_namespace_and_name)
         raise 'cannot find repo in shared repos' unless Dir.exists?(shared_repo_dir)
 
         # check that commit exists
@@ -32,11 +31,16 @@ module GitStrategy
           end
         end
 
-        # clone
-        Cocaine::CommandLine.new('git', 'clone --quiet --shared --no-checkout :repo :dir').run(repo: shared_repo_dir, dir: tmp_dir)
+        repo_checkout_path = File.join(Kochiku::Worker::GitRepo::WORKING_DIR, cached_repo_name)
 
-        Dir.chdir(tmp_dir) do
-          # checkout
+        if Dir.exist?(repo_checkout_path)
+          Cocaine::CommandLine.new('git', 'fetch --quiet').run
+        else
+          Cocaine::CommandLine.new('git', 'clone --quiet --shared --no-checkout :repo :dir').run(repo: shared_repo_dir, dir: repo_checkout_path)
+        end
+
+        Dir.chdir(repo_checkout_path) do
+          Cocaine::CommandLine.new('git', 'clean -dfx').run
           Cocaine::CommandLine.new('git', 'checkout --quiet :commit').run(commit: commit)
 
           # init submodules
@@ -54,6 +58,8 @@ module GitStrategy
             Cocaine::CommandLine.new('git', 'submodule update -- :path').run(path: path)
           end
         end
+
+        repo_checkout_path
       end
     end
   end
