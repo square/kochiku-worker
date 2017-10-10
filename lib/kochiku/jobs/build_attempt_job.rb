@@ -32,10 +32,7 @@ class BuildAttemptJob < JobBase
     redis_client.set(redis_key, @build_attempt_id, ex: 60 * 60)
 
     logstreamer_port = Kochiku::Worker.settings['logstreamer_port']
-    if logstreamer_port && !launch_logstreamer(logstreamer_port)
-      logger.info("Launch of logstreamer on port #{logstreamer_port} failed.")
-      logstreamer_port = nil
-    end
+    launch_logstreamer(logstreamer_port)
 
     logger.info("Build Attempt #{@build_attempt_id} perform starting")
 
@@ -44,7 +41,7 @@ class BuildAttemptJob < JobBase
     Retryable.retryable(tries: 5, on: Kochiku::Worker::GitRepo::RefNotFoundError, sleep: 12) do   # wait for up to 60 seconds for the sha to be available
       Kochiku::Worker::GitRepo.inside_copy(@repo_name, @remote_name, @repo_url, @build_ref) do
         begin
-          options = @options.merge("git_commit" => @build_ref, "git_branch" => @branch, "kochiku_env" => @kochiku_env, "logstreamer_enabled" => !!logstreamer_port)
+          options = @options.merge("git_commit" => @build_ref, "git_branch" => @branch, "kochiku_env" => @kochiku_env)
           result = run_tests(@build_kind, @test_files, @test_command, @timeout, options) ? :passed : :failed
           signal_build_is_finished(result)
           redis_client.del(redis_key)
@@ -61,7 +58,7 @@ class BuildAttemptJob < JobBase
   # attempts to launch logstreamer on specified port. Returns true on success, false otherwise.
   def launch_logstreamer(port)
     exception_cb = Proc.new do
-      Dir.chdir("logstreamer") { system("./logstreamer -p #{port} &") }
+      `#{worker_base_dir}/logstreamer/logstreamer -p #{port} &`
     end
 
     begin
@@ -70,7 +67,8 @@ class BuildAttemptJob < JobBase
         RestClient.get("http://localhost:#{port}/_status", :timeout => 5).code == 200
       end
       true
-    rescue Errno::EHOSTUNREACH, Errno::ECONNREFUSED, RestClient::Exception, SocketError
+    rescue Errno::EHOSTUNREACH, Errno::ECONNREFUSED, RestClient::Exception, SocketError => e
+      logger.info("Failed to launch logstreamer: #{e.message}")
       false
     end
   end
