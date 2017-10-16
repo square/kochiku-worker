@@ -13,8 +13,9 @@ module BuildStrategy
       if options['log_file_globs']
         @log_files = options['log_file_globs'] + [LOG_FILE, STACK_TRACES]
       end
-
-      hardlink_log(LOG_FILE)
+      if options['logstreamer_enabled']
+        hardlink_log(LOG_FILE)
+      end
       execute_with_timeout_and_kill(ci_command(build_kind, test_files, test_command, options), timeout)
     end
 
