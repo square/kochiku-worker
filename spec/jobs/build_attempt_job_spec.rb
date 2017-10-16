@@ -56,7 +56,7 @@ RSpec.describe BuildAttemptJob do
         end
       end
 
-      context "unable to launch logstreamer" do
+      context "always assume logstreamer is launched" do
         before do
           allow(RestClient).to receive(:get).and_raise Errno::ECONNREFUSED
         end
@@ -69,12 +69,17 @@ RSpec.describe BuildAttemptJob do
           stub_request(:post, "#{master_host}/build_attempts/#{build_attempt_id}/finish")
 
           subject.perform
-          expect(WebMock).to have_requested(:post, "#{master_host}/build_attempts/#{build_attempt_id}/start").with(:body => {"builder"=> hostname})
+          expect(WebMock).to have_requested(:post, "#{master_host}/build_attempts/#{build_attempt_id}/start").with(body: "builder=#{hostname}&logstreamer_port=10000")
         end
       end
     end
 
     context "build_attempt has been aborted" do
+      before do
+        allow(RestClient).to receive(:get)
+        allow(subject).to receive(:launch_logstreamer)
+      end
+
       it "should return without running the tests" do
         stub_request(:post, "#{master_host}/build_attempts/#{build_attempt_id}/start").to_return(:body => {'build_attempt' => {'state' => 'aborted'}}.to_json)
 
@@ -85,8 +90,10 @@ RSpec.describe BuildAttemptJob do
 
     it "sets the builder on its build attempt" do
       hostname = "i-am-a-compooter"
+
       allow(subject).to receive(:run_tests)
       allow(subject).to receive(:hostname).and_return(hostname)
+      allow(subject).to receive(:launch_logstreamer).and_return(false)
       stub_request(:post, "#{master_host}/build_attempts/#{build_attempt_id}/start").to_return(:body => {'build_attempt' => {'state' => 'running'}}.to_json)
       stub_request(:post, "#{master_host}/build_attempts/#{build_attempt_id}/finish")
 
@@ -95,7 +102,11 @@ RSpec.describe BuildAttemptJob do
     end
 
     context "build is successful" do
-      before { allow(subject).to receive(:run_tests).and_return(true) }
+      before do
+        allow(subject).to receive(:run_tests).and_return(true)
+        allow(RestClient).to receive(:get)
+        allow(subject).to receive(:launch_logstreamer)
+      end
 
       it "creates a build result with a passed result" do
         stub_request(:post, "#{master_host}/build_attempts/#{build_attempt_id}/start").to_return(:body => {'build_attempt' => {'state' => 'running'}}.to_json)
@@ -108,7 +119,11 @@ RSpec.describe BuildAttemptJob do
     end
 
     context "build is unsuccessful" do
-      before { allow(subject).to receive(:run_tests).and_return(false) }
+      before do
+        allow(subject).to receive(:run_tests).and_return(false)
+        allow(RestClient).to receive(:get)
+        allow(subject).to receive(:launch_logstreamer)
+      end
 
       it "creates a build result with a failed result" do
         stub_request(:post, "#{master_host}/build_attempts/#{build_attempt_id}/start").to_return(:body => {'build_attempt' => {'state' => 'running'}}.to_json)
@@ -122,6 +137,11 @@ RSpec.describe BuildAttemptJob do
 
     context "an exception occurs" do
       class FakeTestError < StandardError; end
+
+      before do
+        allow(RestClient).to receive(:get)
+        allow(subject).to receive(:launch_logstreamer)
+      end
 
       it "sets the build attempt state to errored" do
         stub_request(:post, "#{master_host}/build_attempts/#{build_attempt_id}/start").to_return(:body => {'build_attempt' => {'state' => 'running'}}.to_json)
