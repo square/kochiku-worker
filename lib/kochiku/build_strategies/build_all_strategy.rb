@@ -4,42 +4,37 @@ module BuildStrategy
   class BuildAllStrategy
     class ErrorFoundInLogError < StandardError; end
 
-    LOG_FILE = "log/stdout.log"
-    STACK_TRACES = "log/stack_traces/*.log"
     KILL_TIMEOUT = 10
 
     def execute_build(build_attempt_id, build_kind, test_files, test_command, timeout, options)
       @build_attempt_id = build_attempt_id
       if options['log_file_globs']
-        @log_files = options['log_file_globs'] + [LOG_FILE, STACK_TRACES]
+        @log_files = options['log_file_globs'] + [stdout_log_file, stack_traces]
       end
-      if options['logstreamer_enabled']
-        hardlink_log(LOG_FILE)
-      end
+
       execute_with_timeout_and_kill(ci_command(build_kind, test_files, test_command, options), timeout)
     end
 
-    # log persistence needed for logstreamer
-    def hardlink_log(log)
-      FileUtils.mkdir_p("log")
-      FileUtils.touch(log)
+    def stdout_log_file
+      'log/stdout.log'
+    end
 
-      FileUtils.mkdir_p("#{kochiku_base_dir}/logstreamer/logs/#{@build_attempt_id}/")
-      FileUtils.ln(log, "#{kochiku_base_dir}/logstreamer/logs/#{@build_attempt_id}/stdout.log")
+    def stack_traces
+      'log/stack_traces/*.log'
     end
 
     def log_files_glob
-      @log_files ||= [LOG_FILE, STACK_TRACES]
+      @log_files ||= [stdout_log_file, stack_traces]
     end
 
     def execute_with_timeout_and_kill(command, timeout)
-      success, pid = BuildStrategy.execute_with_timeout(command, timeout, LOG_FILE)
+      success, pid = BuildStrategy.execute_with_timeout(command, timeout, stdout_log_file)
       success
     ensure
       processes_killed = kill_process_group(pid, 15)
 
       if processes_killed.length > 0
-        File.open(LOG_FILE, 'a') do |file|
+        File.open(stdout_log_file, 'a') do |file|
           file.write("\n\n******** The following process(es) taking too long, Kochiku killing NOW ************\n")
           file.write(processes_killed.join("\n"))
         end
@@ -164,7 +159,7 @@ module BuildStrategy
     end
 
     def check_log_for_errors!
-      File.open(LOG_FILE, :encoding => 'UTF-8') do |file|
+      File.open(stdout_log_file, :encoding => 'UTF-8') do |file|
         file.each do |line|
           raise ErrorFoundInLogError.new(line) if known_error?(line)
         end

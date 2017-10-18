@@ -9,7 +9,7 @@ RSpec.describe BuildStrategy::BuildAllStrategy do
     allow(Process).to receive(:spawn) do |*args|
       @spawned_pid = old_spawn.call(*args)
     end
-    File.unlink(BuildStrategy::BuildAllStrategy::LOG_FILE) if File.exists?(BuildStrategy::BuildAllStrategy::LOG_FILE)
+    File.unlink(subject.stdout_log_file) if File.exists?(subject.stdout_log_file)
 
     stub_const("BuildStrategy::BuildAllStrategy::KILL_TIMEOUT", 1)
     allow(BuildStrategy).to receive(:take_jstack)
@@ -18,7 +18,7 @@ RSpec.describe BuildStrategy::BuildAllStrategy do
   describe "#execute_with_timeout_and_kill" do
     let(:busy_wait) { "while true; do true; done"}
     let(:trap_sigterm) { "trap 'echo SIGTERM blocked' 15"}
-    let(:log) { IO.readlines(BuildStrategy::BuildAllStrategy::LOG_FILE) }
+    let(:log) { IO.readlines(subject.stdout_log_file) }
     let(:process_kill_message) { "******** The following process(es) taking too long, Kochiku killing NOW ************\n" }
 
     it "should not claim to have killed when it didn't" do

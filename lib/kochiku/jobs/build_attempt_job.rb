@@ -32,10 +32,7 @@ class BuildAttemptJob < JobBase
     redis_client.set(redis_key, @build_attempt_id, ex: 60 * 60)
 
     logstreamer_port = Kochiku::Worker.settings['logstreamer_port']
-    if logstreamer_port && !launch_logstreamer(logstreamer_port)
-      logger.info("Launch of logstreamer on port #{logstreamer_port} failed.")
-      logstreamer_port = nil
-    end
+    launch_logstreamer(logstreamer_port)
 
     logger.info("Build Attempt #{@build_attempt_id} perform starting")
 
@@ -44,7 +41,8 @@ class BuildAttemptJob < JobBase
     Retryable.retryable(tries: 5, on: Kochiku::Worker::GitRepo::RefNotFoundError, sleep: 12) do   # wait for up to 60 seconds for the sha to be available
       Kochiku::Worker::GitRepo.inside_copy(@repo_name, @remote_name, @repo_url, @build_ref) do
         begin
-          options = @options.merge("git_commit" => @build_ref, "git_branch" => @branch, "kochiku_env" => @kochiku_env, "logstreamer_enabled" => !!logstreamer_port)
+          hardlink_log(Kochiku::Worker.build_strategy.stdout_log_file)
+          options = @options.merge("git_commit" => @build_ref, "git_branch" => @branch, "kochiku_env" => @kochiku_env)
           result = run_tests(@build_kind, @test_files, @test_command, @timeout, options) ? :passed : :failed
           signal_build_is_finished(result)
           redis_client.del(redis_key)
@@ -60,19 +58,9 @@ class BuildAttemptJob < JobBase
 
   # attempts to launch logstreamer on specified port. Returns true on success, false otherwise.
   def launch_logstreamer(port)
-    exception_cb = Proc.new do
-      Dir.chdir("logstreamer") { system("./logstreamer -p #{port} &") }
-    end
-
-    begin
-      Retryable.retryable(sleep: 3, on: [Errno::EHOSTUNREACH, Errno::ECONNREFUSED, RestClient::Exception, SocketError],
-          exception_cb: exception_cb, tries: 2) do
-        RestClient.get("http://localhost:#{port}/_status", :timeout => 5).code == 200
-      end
-      true
-    rescue Errno::EHOSTUNREACH, Errno::ECONNREFUSED, RestClient::Exception, SocketError
-      false
-    end
+    logstreamer_cmd = "#{worker_base_dir}/logstreamer/logstreamer -p #{port}"
+    pid = Process.spawn(logstreamer_cmd, out: [log_file, "a"], err: [:child, :out], pgroup: true)
+    Process.detach(pid)
   end
 
   def collect_logs(file_glob)
@@ -134,6 +122,15 @@ class BuildAttemptJob < JobBase
     Bundler.with_clean_env do
       Process.spawn(clean_script, out: [log_file, "a"], err: [:child, :out], pgroup: true)
     end
+  end
+
+  # log persistence needed for logstreamer
+  def hardlink_log(log)
+    FileUtils.mkdir_p("log")
+    FileUtils.touch(log)
+
+    FileUtils.mkdir_p("#{worker_base_dir}/logstreamer/logs/#{@build_attempt_id}/")
+    FileUtils.ln(log, "#{worker_base_dir}/logstreamer/logs/#{@build_attempt_id}/stdout.log")
   end
 
   def log_file
