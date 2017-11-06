@@ -1,8 +1,5 @@
 test_command: 'script/ci'
 
-ruby:
- - 2.4.1
-
 targets:
   - type: spec
     glob: spec/**/*_spec.rb
