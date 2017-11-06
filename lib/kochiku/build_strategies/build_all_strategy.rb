@@ -129,9 +129,9 @@ module BuildStrategy
 
     def ci_command(build_kind, test_files, test_command, options)
       ruby_command = if options["ruby"]
-        "rvm --install --create use #{options["ruby"]}"
+        "rvm --install --disable-binary --create use #{options["ruby"]}"
       else
-        "if [ -e .rvmrc ]; then source .rvmrc; elif [ -e .ruby-version ]; then rvm --install --create use $(cat .ruby-version); fi"
+        "if [ -e .rvmrc ]; then source .rvmrc; elif [ -e .ruby-version ]; then rvm --install --disable-binary --create use $(cat .ruby-version); fi"
       end
 
       java_options = ""
