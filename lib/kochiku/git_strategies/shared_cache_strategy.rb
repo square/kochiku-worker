@@ -17,9 +17,9 @@ module GitStrategy
   # 1. Add multiple shared roots and choose randomly between them. Poor man's client side load balancing.
   class SharedCache
     class << self
-      def clone_and_checkout(cached_repo_name, repo_url, commit)
-        repo_namespace_and_name = repo_url.match(/.+?([^\/]+\/[^\/]+\.git)/)[1]
-        shared_repo_dir = File.join(Kochiku::Worker.settings.git_shared_root, repo_namespace_and_name)
+      def clone_and_checkout(repo_url, commit)
+        repo_path = repo_url.match(/.+?([^\/]+\/[^\/]+\.git)\z/)[1]
+        shared_repo_dir = File.join(Kochiku::Worker.settings.git_shared_root, repo_path)
         raise 'cannot find repo in shared repos' unless Dir.exists?(shared_repo_dir)
 
         # check that commit exists
@@ -31,7 +31,8 @@ module GitStrategy
           end
         end
 
-        repo_checkout_path = File.join(Kochiku::Worker::GitRepo::WORKING_DIR, cached_repo_name)
+        repo_namespace_and_name = repo_path.chomp('.git')
+        repo_checkout_path = File.join(Kochiku::Worker::GitRepo::WORKING_DIR, repo_namespace_and_name)
 
         # No `git fetch` is needed if the clone already exists because the NFS
         # origin is continually up to date. However, a `git fetch` is needed if
