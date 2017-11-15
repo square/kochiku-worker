@@ -9,9 +9,7 @@ class BuildAttemptJob < JobBase
     @build_kind = build_options["build_kind"]
     @branch = build_options["branch"]
     @test_files = build_options["test_files"]
-    @repo_name = build_options["repo_name"]
     @test_command = build_options["test_command"]
-    @remote_name = build_options["remote_name"]
     @repo_url = build_options["repo_url"]
     @timeout = build_options["timeout"]
     @options = build_options["options"] || {}
@@ -38,7 +36,7 @@ class BuildAttemptJob < JobBase
     return if signal_build_is_starting(logstreamer_port) == :aborted
 
     Retryable.retryable(tries: 5, on: Kochiku::Worker::GitRepo::RefNotFoundError, sleep: 12) do   # wait for up to 60 seconds for the sha to be available
-      Kochiku::Worker::GitRepo.inside_copy(@repo_name, @remote_name, @repo_url, @build_ref) do
+      Kochiku::Worker::GitRepo.inside_copy(@repo_url, @build_ref) do
         begin
           options = @options.merge("git_commit" => @build_ref, "git_branch" => @branch, "kochiku_env" => @kochiku_env, "logstreamer_enabled" => !!logstreamer_port)
           result = run_tests(@build_kind, @test_files, @test_command, @timeout, options) ? :passed : :failed
