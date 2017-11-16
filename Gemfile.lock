@@ -63,7 +63,7 @@ GEM
       http-cookie (>= 1.0.2, < 2.0)
       mime-types (>= 1.16, < 4.0)
       netrc (~> 0.8)
-    retryable (2.0.3)
+    retryable (2.0.4)
     rspec (3.2.0)
       rspec-core (~> 3.2.0)
       rspec-expectations (~> 3.2.0)
@@ -119,4 +119,4 @@ DEPENDENCIES
   webmock
 
 BUNDLED WITH
-   1.15.2
+   1.16.0

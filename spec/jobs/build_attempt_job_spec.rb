@@ -14,8 +14,6 @@ RSpec.describe BuildAttemptJob do
       "build_ref" => build_ref,
       "build_kind" => build_part_kind,
       "test_files" => test_files,
-      "repo_name" => 'local-cache',
-      "remote_name" => "origin",
       "test_command" => "script/ci worker",
       "repo_url" => "git@github.com:square/kochiku-worker.git"
   } }
@@ -24,7 +22,6 @@ RSpec.describe BuildAttemptJob do
   subject { BuildAttemptJob.new(build_options) }
 
   before do
-    FileUtils.mkdir_p(File.join(File.dirname(__FILE__), "..", "..", "tmp", "build-partition", "local-cache"))
     allow_any_instance_of(Kochiku::Worker.build_strategy.class).to receive(:stdout_log_file).and_return('log/stdout.log')
     allow(subject).to receive(:hardlink_log)
     allow(subject).to receive(:clean_orphan_processes)
@@ -32,7 +29,7 @@ RSpec.describe BuildAttemptJob do
 
   describe "#perform" do
     before do
-      allow(GitStrategy::LocalCache).to receive(:system).and_return(true)
+      allow(Kochiku::Worker::GitRepo).to receive(:inside_copy).and_yield
     end
 
     context "logstreamer port specified" do
