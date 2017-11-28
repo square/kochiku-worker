@@ -63,7 +63,7 @@ module GitStrategy
         end
         Dir.chdir(cached_repo_path) do
           harmonize_remote_url(repo_url)
-          synchronize_cache_repo
+          run_git_fetch
 
           if !commit.nil? && !system("git rev-list --quiet -n1 #{commit}")
             raise Kochiku::Worker::GitRepo::RefNotFoundError.new("Build Ref #{commit} not found in #{repo_url}")
@@ -83,8 +83,7 @@ module GitStrategy
         Cocaine::CommandLine.new("git clone", "--recursive #{repo_url} #{cached_repo_path}").run
       end
 
-      # fancy name for run 'git fetch' on the cache repo
-      def synchronize_cache_repo
+      def run_git_fetch
         exception_cb = Proc.new do |exception|
           Kochiku::Worker.logger.warn(exception)
         end
