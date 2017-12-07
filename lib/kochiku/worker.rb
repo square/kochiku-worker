@@ -4,6 +4,7 @@ Bundler.require
 require 'logger'
 
 require 'resque'
+require 'rest-client'
 
 require 'kochiku/settings'
 require 'kochiku/git_repo'
@@ -65,3 +66,5 @@ end
 
 Resque.redis = Redis.new(:host => Kochiku::Worker.settings.redis_host, :port => Kochiku::Worker.settings.redis_port)
 Resque.redis.namespace = "resque:kochiku"
+
+RestClient.log = Kochiku::Worker.logger
