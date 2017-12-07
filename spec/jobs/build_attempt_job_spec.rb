@@ -140,6 +140,8 @@ RSpec.describe BuildAttemptJob do
 
       it "sets the build attempt state to errored" do
         stub_request(:post, "#{master_host}/build_attempts/#{build_attempt_id}/start").to_return(:body => {'build_attempt' => {'state' => 'running'}}.to_json)
+        stub_request(:get, "#{master_host}/build_attempts/#{build_attempt_id}/build_artifacts/new?build_artifact[log_file]=error.txt").to_return(body: {'url' => 'https://s3', 'fields' => {}}.to_json)
+        stub_request(:post, "https://s3")
         stub_request(:post, "#{master_host}/build_attempts/#{build_attempt_id}/build_artifacts")
         stub_request(:post, "#{master_host}/build_attempts/#{build_attempt_id}/finish")
 
@@ -149,18 +151,16 @@ RSpec.describe BuildAttemptJob do
 
         expect { BuildAttemptJob.perform(build_options) }.to raise_error(FakeTestError)
 
-        expect(WebMock).to have_requested(:post, "#{master_host}/build_attempts/#{build_attempt_id}/build_artifacts").with(
-          :headers => {'Content-Type' => /multipart\/form-data/}
-          # current version of Webmock does not support matching body for multipart/form-data requests
-          # https://github.com/bblimke/webmock/issues/623
-          #:body => /something went wrong/
-        )
+        expect(WebMock).to have_requested(:post, "https://s3").with { |req| req.body.include?("Content-Disposition: form-data; name=\"file\"; filename=\"error.txt\"") }
+        expect(WebMock).to have_requested(:post, "#{master_host}/build_attempts/#{build_attempt_id}/build_artifacts").with { |req| req.body == "build_artifact[log_file]=error.txt" }
         expect(WebMock).to have_requested(:post, "#{master_host}/build_attempts/#{build_attempt_id}/finish").with(:body => {"state" => "errored"})
       end
 
       context "and its GitRepo::RefNotFoundError" do
         it "sets the build attempt state to aborted" do
           stub_request(:post, "#{master_host}/build_attempts/#{build_attempt_id}/start").to_return(:body => {'build_attempt' => {'state' => 'running'}}.to_json)
+          stub_request(:get, "#{master_host}/build_attempts/#{build_attempt_id}/build_artifacts/new?build_artifact[log_file]=aborted.txt").to_return(body: {'url' => 'https://s3', 'fields' => {}}.to_json)
+          stub_request(:post, "https://s3")
           stub_request(:post, "#{master_host}/build_attempts/#{build_attempt_id}/build_artifacts")
           stub_request(:post, "#{master_host}/build_attempts/#{build_attempt_id}/finish")
 
@@ -170,7 +170,6 @@ RSpec.describe BuildAttemptJob do
 
           expect { BuildAttemptJob.perform(build_options) }.to_not raise_error
 
-          expect(WebMock).to have_requested(:post, "#{master_host}/build_attempts/#{build_attempt_id}/build_artifacts")
           expect(WebMock).to have_requested(:post, "#{master_host}/build_attempts/#{build_attempt_id}/finish").with(:body => {"state" => "aborted"})
         end
       end
@@ -181,6 +180,8 @@ RSpec.describe BuildAttemptJob do
     before do
       allow(Cocaine::CommandLine).to receive(:new).with("gzip", anything).and_call_original
       stub_request(:any, /#{master_host}.*/)
+      stub_request(:get, /#{master_host}\/build_attempts\/\d+\/build_artifacts\/new.*/).to_return(body: {'url' => 'https://s3', 'fields' => {}}.to_json)
+      stub_request(:post, "https://s3")
     end
 
     it "posts the local build logs back to the master server" do
@@ -199,7 +200,9 @@ RSpec.describe BuildAttemptJob do
 
           wanted_logs.each do |artifact|
             log_name = File.basename(artifact)
-            expect(WebMock).to have_requested(:post, "#{master_host}/build_attempts/#{build_attempt_id}/build_artifacts").with { |req| req.body.include?(log_name) }
+            expect(WebMock).to have_requested(:get, "#{master_host}/build_attempts/#{build_attempt_id}/build_artifacts/new?build_artifact[log_file]=#{log_name}.gz")
+            expect(WebMock).to have_requested(:post, "https://s3").with { |req| req.body.include?("Content-Disposition: form-data; name=\"file\"; filename=\"#{log_name}.gz\"") }
+            expect(WebMock).to have_requested(:post, "#{master_host}/build_attempts/#{build_attempt_id}/build_artifacts").with { |req| req.body == "build_artifact[log_file]=#{log_name}.gz" }
           end
         end
       end

@@ -180,18 +180,36 @@ class BuildAttemptJob < JobBase
   end
 
   def upload_log_file(file)
-    log_artifact_upload_url = "#{url_base}/build_artifacts"
+    upload_credentials = with_http_retries do
+      JSON.parse(
+        RestClient.get(
+          "#{url_base}/build_artifacts/new",
+          params: { build_artifact: { log_file: File.basename(file.path) } }
+        )
+      )
+    end
+
     with_http_retries do
       file.rewind
-      RestClient::Request.execute(method: :post,
-                                  url: log_artifact_upload_url,
-                                  payload: { build_artifact: { log_file: file.clone } },
-                                  headers: { accept: :xml },
-                                  timeout: 60 * 5)
+
+      RestClient::Request.execute(
+        method: :post,
+        url: upload_credentials['url'],
+        payload: upload_credentials['fields'].update('file' => file.clone),
+        timeout: 5 * 60
+      )
+    end
+
+    with_http_retries do
+      RestClient::Request.execute(
+        method: :post,
+        url: "#{url_base}/build_artifacts",
+        payload: { build_artifact: { log_file: File.basename(file.path) } }
+      )
     end
   rescue Errno::ECONNRESET, Errno::EHOSTUNREACH, RestClient::Exception, RuntimeError => e
     # log exception and continue. A failed log file upload should not interrupt the BuildAttempt
-    logger.error("Upload of artifact (#{file.to_s}) for Build Attempt #{@build_attempt_id} failed: #{e.message}")
+    logger.error("Upload of artifact (#{file.path}) for Build Attempt #{@build_attempt_id} failed: #{e.message}")
   ensure
     file.close
   end
