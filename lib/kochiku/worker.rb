@@ -71,3 +71,5 @@ end
 
 Resque.redis = Kochiku::Worker.redis_client
 Resque.redis.namespace = "resque:kochiku"
+
+RestClient.log = Kochiku::Worker.logger
