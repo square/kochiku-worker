@@ -4,6 +4,12 @@ set -ex
 
 export HOME=/data/app/kochiku-worker
 
+export HTTPS_PROXY=http://webproxy.vip:3128
+export HTTP_PROXY=http://webproxy.vip:3128
+export http_proxy=http://webproxy.vip:3128
+export https_proxy=http://webproxy.vip:3128
+export no_proxy='vip,square'
+
 cd $(dirname $0)/../../
 
 # add git executable to the path
