@@ -67,4 +67,4 @@ end
 Resque.redis = Redis.new(:host => Kochiku::Worker.settings.redis_host, :port => Kochiku::Worker.settings.redis_port)
 Resque.redis.namespace = "resque:kochiku"
 
-RestClient.log = Kochiku::Worker.logger
+RestClient.log = Kochiku::Worker.logger unless ENV['RACK_ENV'] == 'test'

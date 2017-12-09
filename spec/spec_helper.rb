@@ -1,5 +1,8 @@
 $:.unshift(File.expand_path('../lib', File.dirname(__FILE__)))
 
+# Setup env variable to use as a trigger for log level during testing
+ENV['RACK_ENV'] = 'test'
+
 require 'rubygems'
 require 'bundler/setup'
 
