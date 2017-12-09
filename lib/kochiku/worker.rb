@@ -4,6 +4,7 @@ Bundler.require
 require 'logger'
 
 require 'resque'
+require 'rest-client'
 
 require 'kochiku/settings'
 require 'kochiku/git_repo'
