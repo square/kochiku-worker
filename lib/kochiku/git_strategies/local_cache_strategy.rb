@@ -16,43 +16,47 @@ module GitStrategy
   # This is the most basic and default git strategy. Use it when you aren't running
   # enough workers to overwhelm your primary git server or git mirror.
   class LocalCache
+    extend Benchmark
+
     class << self
       def clone_and_checkout(repo_url, commit)
-        tmp_dir = Dir.mktmpdir(nil, Kochiku::Worker::GitRepo::WORKING_DIR)
+        benchmark "LocalCache.clone_and_checkout(#{repo_url}, #{commit})" do
+          tmp_dir = Dir.mktmpdir(nil, Kochiku::Worker::GitRepo::WORKING_DIR)
 
-        repo_path = repo_url.match(/.+?([^:\/]+\/[^\/]+)\.git\z/)[1]
-        cached_repo_path = File.join(Kochiku::Worker::GitRepo::WORKING_DIR, repo_path)
-        synchronize_cache_repo(cached_repo_path, repo_url, commit)
+          repo_path = repo_url.match(/.+?([^:\/]+\/[^\/]+)\.git\z/)[1]
+          cached_repo_path = File.join(Kochiku::Worker::GitRepo::WORKING_DIR, repo_path)
+          synchronize_cache_repo(cached_repo_path, repo_url, commit)
 
-        # clone local repo (fast!)
-        run! "git clone #{cached_repo_path} #{tmp_dir}"
+          # clone local repo (fast!)
+          run! "git clone #{cached_repo_path} #{tmp_dir}"
 
-        Dir.chdir(tmp_dir) do
-          run! "git checkout --quiet #{commit}"
+          Dir.chdir(tmp_dir) do
+            run! "git checkout --quiet #{commit}"
 
-          run! "git submodule --quiet init"
+            run! "git submodule --quiet init"
 
-          submodules = `git config --get-regexp "^submodule\\..*\\.url$"`
+            submodules = `git config --get-regexp "^submodule\\..*\\.url$"`
 
-          unless submodules.empty?
-            cached_submodules = `git config --get-regexp "^submodule\\..*\\.url$"`
+            unless submodules.empty?
+              cached_submodules = `git config --get-regexp "^submodule\\..*\\.url$"`
 
-            # Redirect the submodules to the cached_repo
-            # If the submodule was added after the initial clone of the cache
-            # repo then it will not be present in the cached_repo and we fall
-            # back to cloning it for each build.
-            submodules.each_line do |config_line|
-              if cached_submodules.include?(config_line)
-                submodule_path = config_line.match(/submodule\.(.*?)\.url/)[1]
-                `git config --replace-all submodule.#{submodule_path}.url "#{cached_repo_path}/#{submodule_path}"`
+              # Redirect the submodules to the cached_repo
+              # If the submodule was added after the initial clone of the cache
+              # repo then it will not be present in the cached_repo and we fall
+              # back to cloning it for each build.
+              submodules.each_line do |config_line|
+                if cached_submodules.include?(config_line)
+                  submodule_path = config_line.match(/submodule\.(.*?)\.url/)[1]
+                  `git config --replace-all submodule.#{submodule_path}.url "#{cached_repo_path}/#{submodule_path}"`
+                end
               end
+
+              run! "git submodule --quiet update"
             end
-
-            run! "git submodule --quiet update"
           end
-        end
 
-        tmp_dir
+          tmp_dir
+        end
       end
 
       private

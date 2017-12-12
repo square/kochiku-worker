@@ -3,6 +3,8 @@ require 'rest-client'
 require 'retryable'
 
 class BuildAttemptJob < JobBase
+  include Benchmark
+
   def initialize(build_options)
     @build_attempt_id = build_options["build_attempt_id"]
     @build_ref = build_options["build_ref"]
@@ -193,17 +195,6 @@ class BuildAttemptJob < JobBase
     upload_log_file(message)
 
     signal_build_is_finished(:aborted)
-  end
-
-  def benchmark(msg, &block)
-    logger.info("[#{msg}] starting")
-    start_time = Time.now
-    begin
-      yield
-    ensure
-      end_time = Time.now
-      logger.info("[#{msg}] finished in #{end_time - start_time}")
-    end
   end
 
   def url_base
