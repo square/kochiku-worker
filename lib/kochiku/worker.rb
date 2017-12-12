@@ -8,9 +8,9 @@ require 'rest-client'
 
 require 'kochiku/settings'
 require 'kochiku/git_repo'
+require 'kochiku/helpers/benchmark'
 require 'kochiku/git_strategies/local_cache_strategy'
 require 'kochiku/git_strategies/shared_cache_strategy'
-
 
 require 'kochiku/build_strategy'
 require 'kochiku/build_strategies/build_all_strategy'
