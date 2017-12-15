@@ -129,9 +129,23 @@ module BuildStrategy
 
     def ci_command(build_kind, test_files, test_command, options)
       ruby_command = if options["ruby"]
-        "rvm --install --disable-binary --create use #{options["ruby"]}"
+        "rvm --install --disable-binary --create use #{options["ruby"]} ;"
       else
-        "if [ -e .rvmrc ]; then source .rvmrc; elif [ -e .ruby-version ]; then rvm --install --disable-binary --create use $(cat .ruby-version); fi"
+        # Note: the version detection from the Gemfile in this script does not work
+        # with JRuby because rvm doesn't support "rvm use" with the version string
+        # returned for JRuby. e.g. ruby 2.3.3 (jruby 9.1.13.0)
+        <<~CMD
+          if [ -e .rvmrc ]; then
+            source .rvmrc
+          elif [ -e .ruby-version ]; then
+            rvm --install --disable-binary --create use $(cat .ruby-version)
+          elif [ -e Gemfile ]; then
+            ruby_version=$(/usr/local/bin/bundle platform --ruby | sed -E "s/^ruby ([0-9\\.]+)p.*/\\1/")
+            if [[ $ruby_version =~ ^[0-9\\.]+$ ]]; then
+              rvm --install --disable-binary --create use $ruby_version
+            fi
+          fi
+        CMD
       end
 
       java_options = ""
@@ -154,7 +168,7 @@ module BuildStrategy
         " RUN_LIST=$TARGETS" +
         " KOCHIKU_ENV=#{options["kochiku_env"]}" +
         java_options +
-        " bash --noprofile --norc -c 'if [ -f /usr/local/rvm/scripts/rvm ]; then source /usr/local/rvm/scripts/rvm; fi; if [ -f /usr/local/nvm/nvm.sh ]; then source /usr/local/nvm/nvm.sh; fi; #{ruby_command} ; ruby -v ; #{test_command}'"
+        " bash --noprofile --norc -c 'if [ -f /usr/local/rvm/scripts/rvm ]; then source /usr/local/rvm/scripts/rvm; fi; if [ -f /usr/local/nvm/nvm.sh ]; then source /usr/local/nvm/nvm.sh; fi; #{ruby_command} ruby -v ; #{test_command}'"
       ).gsub("$TARGETS", test_files.join(','))
     end
 
