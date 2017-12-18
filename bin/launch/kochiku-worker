@@ -17,6 +17,11 @@ export PATH=$(pwd)/bin:$PATH
 
 mkdir -p tmp/build-partition
 
+# cleanup any temp build directories that may have been orphaned by an unclean
+# exit of kochiku-worker. Safe to do under the assumption of 1 worker per
+# machine.
+find tmp/build-partition -maxdepth 1 -name 'd20[0-9]*' -type d -print0 | xargs -0 -t -n1 rm -rf
+
 # Extract the resque queues from the p2 manifest config
 queues=$(./ruby/bin/ruby -ryaml -e '$a=YAML.load_file(ENV["CONFIG_PATH"]); print $a.fetch("resque").fetch("queues")')
 
