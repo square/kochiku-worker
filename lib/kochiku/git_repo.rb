@@ -21,7 +21,7 @@ module Kochiku
           Dir.chdir(dir) do
             yield
           end
-
+        ensure
           if Kochiku::Worker.settings.git_strategy == 'localcache'
             FileUtils.remove_entry(dir)
           end
