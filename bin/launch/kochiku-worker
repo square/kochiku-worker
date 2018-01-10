@@ -4,10 +4,10 @@ set -ex
 
 export HOME=/data/app/kochiku-worker
 
-export HTTPS_PROXY=http://webproxy.vip:3128
-export HTTP_PROXY=http://webproxy.vip:3128
-export http_proxy=http://webproxy.vip:3128
-export https_proxy=http://webproxy.vip:3128
+export HTTPS_PROXY=http://$USER:$HOSTNAME@webproxy.vip:3128
+export HTTP_PROXY=http://$USER:$HOSTNAME@webproxy.vip:3128
+export http_proxy=http://$USER:$HOSTNAME@webproxy.vip:3128
+export https_proxy=http://$USER:$HOSTNAME@webproxy.vip:3128
 export no_proxy='vip,square,corp.squareup.com,localhost,127.0.0.1'
 
 cd $(dirname $0)/../../
