@@ -167,6 +167,8 @@ module BuildStrategy
         " GIT_BRANCH=#{options["git_branch"]}" +
         " RUN_LIST=$TARGETS" +
         " KOCHIKU_ENV=#{options["kochiku_env"]}" +
+        " KOCHIKU_TOTAL_WORKERS=#{options["total_workers"]}" +
+        " KOCHIKU_WORKER_CHUNK=#{options["worker_chunk"]}" +
         java_options +
         " bash --noprofile --norc -c 'if [ -f /usr/local/rvm/scripts/rvm ]; then source /usr/local/rvm/scripts/rvm; fi; if [ -f /usr/local/nvm/nvm.sh ]; then source /usr/local/nvm/nvm.sh; fi; #{ruby_command} ruby -v ; #{test_command}'"
       ).gsub("$TARGETS", test_files.join(','))
