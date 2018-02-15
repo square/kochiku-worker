@@ -14,6 +14,13 @@ RSpec.describe BuildStrategy::BuildAllStrategy do
     stub_const("BuildStrategy::BuildAllStrategy::KILL_TIMEOUT", 1)
   end
 
+  describe "#ci_command" do
+    it "should quote the test_runner variable" do
+      command = subject.send(:ci_command, "build --parallel", ["i/am/a/spec"], "rspec",{})
+      expect( command).to include("TEST_RUNNER='build --parallel'")
+    end
+  end
+
   describe "#execute_with_timeout_and_kill" do
     let(:busy_wait) { "while true; do true; done"}
     let(:trap_sigterm) { "trap 'echo SIGTERM blocked' 15"}
