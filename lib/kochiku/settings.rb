@@ -18,6 +18,7 @@ module Kochiku
         contents["git_strategy"] = user_defined_options["git_strategy"] || "localcache"
         contents["git_shared_root"] = user_defined_options["git_shared_root"]
         contents["logstreamer_port"] = user_defined_options['logstreamer_port']
+        contents["running_on_ec2"] = user_defined_options['running_on_ec2'] || false
 
         validate!(contents)
 
