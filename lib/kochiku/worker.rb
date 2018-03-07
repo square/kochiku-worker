@@ -63,7 +63,7 @@ module Kochiku
 
       def instance_type
         @instance_type ||= begin
-          path = File.join(File.dirname(__FILE__),'..', '..', 'tmp', 'instance_type.txt')
+          path = File.join(File.dirname(__FILE__), '..', '..', 'tmp', 'instance_type.txt')
           if File.file?(path)
             instance_type = File.read(path).chomp
           elsif settings.running_on_ec2
