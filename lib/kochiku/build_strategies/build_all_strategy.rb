@@ -162,7 +162,7 @@ module BuildStrategy
         " LC_ALL=en_US.UTF-8" +
         " PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin:/usr/X11/bin:$M2" +
         " DISPLAY=localhost:1.0" +
-        " TEST_RUNNER=#{build_kind}" +
+        " TEST_RUNNER='#{build_kind}'" +
         " GIT_COMMIT=#{options["git_commit"]}" +
         " GIT_BRANCH=#{options["git_branch"]}" +
         " RUN_LIST=$TARGETS" +

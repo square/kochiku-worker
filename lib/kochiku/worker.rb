@@ -66,6 +66,31 @@ module Kochiku
       def redis_client
         Redis.new(host: Kochiku::Worker.settings.redis_host, port: Kochiku::Worker.settings.redis_port)
       end
+
+      def instance_type
+        @instance_type ||= begin
+          path = File.join(File.dirname(__FILE__), '..', '..', 'tmp', 'instance_type.txt')
+          if File.file?(path)
+            instance_type = File.read(path).chomp
+          elsif settings.running_on_ec2
+            instance_type = request_instance_type_from_ec2
+            File.write(path, instance_type) if instance_type
+          end
+          instance_type
+        end
+      end
+
+      def request_instance_type_from_ec2
+        begin
+          instance_type = RestClient::Request.execute(method: :get,
+                                                      url: "http://169.254.169.254/latest/meta-data/instance-type",
+                                                      open_timeout: 5).body
+        rescue RestClient::Exceptions::OpenTimeout => e
+          logger.warn "Error requesting ec2 metadata: #{e.inspect}"
+          return nil
+        end
+        instance_type
+      end
     end
   end
 end
@@ -73,4 +98,4 @@ end
 Resque.redis = Kochiku::Worker.redis_client
 Resque.redis.namespace = "resque:kochiku"
 
-RestClient.log = Kochiku::Worker.logger
+RestClient.log = Kochiku::Worker.logger unless ENV['RACK_ENV'] == 'test'

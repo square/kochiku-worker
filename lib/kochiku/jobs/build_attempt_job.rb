@@ -155,6 +155,7 @@ class BuildAttemptJob < JobBase
     benchmark("Signal Build Attempt #{@build_attempt_id} starting") do
       build_start_url = "#{url_base}/start"
       payload = {:builder => hostname}
+      payload[:instance_type] = Kochiku::Worker.instance_type if Kochiku::Worker.instance_type
       payload[:logstreamer_port] = logstreamer_port if logstreamer_port
 
       with_http_retries do

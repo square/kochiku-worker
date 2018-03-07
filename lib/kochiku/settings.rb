@@ -20,6 +20,7 @@ module Kochiku
         contents["aws_access_key"] = user_defined_options["aws_access_key"]
         contents["aws_secret_key"] = user_defined_options["aws_secret_key"]
         contents["logstreamer_port"] = user_defined_options['logstreamer_port']
+        contents["running_on_ec2"] = user_defined_options['running_on_ec2'] || false
 
         validate!(contents)
 
