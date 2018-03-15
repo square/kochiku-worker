@@ -20,7 +20,6 @@ require 'kochiku/build_strategy_factory'
 
 require 'kochiku/jobs/job_base'
 require 'kochiku/jobs/build_attempt_job'
-require 'kochiku/jobs/sanity_check_job'
 require 'kochiku/jobs/shutdown_instance_job'
 require 'kochiku/jobs/system_status_report_job'
 
