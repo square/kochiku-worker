@@ -84,7 +84,8 @@ class BuildAttemptJob < JobBase
   end
 
   def on_exception(e)
-    if e.instance_of? Kochiku::Worker::GitRepo::RefNotFoundError
+    if e.instance_of? Kochiku::Worker::GitRepo::RefNotFoundError ||
+      (e.instance_of? Cocaine::ExitStatusError && e.message.include?("Invalid symmetric difference expression"))
       handle_git_ref_not_found(e)
       # avoid calling super because this does not need to go into the failed queue
       return
