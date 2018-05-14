@@ -89,8 +89,6 @@ class BuildAttemptJob < JobBase
       handle_git_ref_not_found(e)
       # avoid calling super because this does not need to go into the failed queue
       return
-    elsif e.instance_of?(Resque::DirtyExit) && e.message.include?("SIGKILL (signal 9)")
-      return
     end
 
     logger.error("Exception occurred during Build Attempt (#{@build_attempt_id}):")
