@@ -46,8 +46,8 @@ GEM
     net-ssh (2.9.1)
     netrc (0.11.0)
     public_suffix (2.0.5)
-    rack (1.6.4)
-    rack-protection (1.5.3)
+    rack (1.6.10)
+    rack-protection (1.5.5)
       rack
     rake (10.3.2)
     redis (3.3.3)
@@ -118,4 +118,4 @@ DEPENDENCIES
   webmock
 
 BUNDLED WITH
-   1.16.0
+   1.16.1
