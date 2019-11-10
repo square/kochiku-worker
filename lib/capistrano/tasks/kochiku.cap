@@ -22,6 +22,7 @@ namespace :kochiku do
         kochiku_web_server_protocol: #{HostSettings.kochiku_web_protocol}
         build_strategy: build_all
         redis_host: #{HostSettings.redis_host}
+        logstreamer_port: #{HostSettings.logstreamer_port}
       END
       upload! StringIO.new(config), release_path.join("config/kochiku-worker.yml")
     end

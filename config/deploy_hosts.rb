@@ -18,6 +18,10 @@ class ConfigAccessor
   def worker_hosts
     @hash['worker_hosts']
   end
+
+  def logstreamer_port
+    @hash['logstreamer_port']
+  end
 end
 
 CONF_FILE = File.expand_path('deploy_hosts.yml', File.dirname(__FILE__))
